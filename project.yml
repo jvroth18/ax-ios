@@ -58,7 +58,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.ax.assistant
-        SWIFT_VERSION: "6.0"
+        # Swift 5 language mode for the app target: AVFoundation/UIKit plumbing predates
+        # sending/Sendable annotations. AXCore builds in Swift 6 mode with tests.
+        SWIFT_VERSION: "5"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
         # Set your Personal Team id here (Xcode > Settings > Accounts), or select it in the UI once.
