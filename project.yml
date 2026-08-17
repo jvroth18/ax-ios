@@ -63,5 +63,5 @@ targets:
         # DEVELOPMENT_TEAM: XXXXXXXXXX
       configs:
         Debug:
-          # Uncomment to build the experimental AXDriver bridge (see AXDriver/README.md):
-          # SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) AX_DRIVER
+          # Append AX_DRIVER to build the experimental driver bridge (see AXDriver/README.md):
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG $(inherited)

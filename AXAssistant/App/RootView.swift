@@ -5,6 +5,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var modelManager = ModelManager()
     @State private var session: VoiceSession?
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
         NavigationStack {
@@ -22,6 +23,9 @@ struct RootView: View {
             }
         }
         .task { await modelManager.loadIfDownloaded() }
+        .sheet(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 })) {
+            OnboardingView(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 }))
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, appState.pendingListen else { return }
             appState.pendingListen = false

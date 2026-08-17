@@ -19,3 +19,4 @@ Models/
 
 # macOS
 .DS_Store
+AXAssistant/Resources/Info.plist

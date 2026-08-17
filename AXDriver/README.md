@@ -22,7 +22,7 @@ the iPhone" that exists without a jailbreak.
 ## Building
 
 1. Follow [WDA-SETUP.md](WDA-SETUP.md) to sign and install the WebDriverAgent runner.
-2. In `project.yml`, uncomment `SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) AX_DRIVER`
-   under the Debug config, then `xcodegen generate` and rebuild.
+2. In `project.yml`, append `AX_DRIVER` to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` under the
+   Debug config, then `xcodegen generate` and rebuild.
 3. Start the WDA runner (see setup doc), confirm `http://127.0.0.1:8100/status` in Safari
    on the phone, then use the Driver screen in AX.

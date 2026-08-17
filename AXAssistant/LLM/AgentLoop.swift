@@ -89,33 +89,10 @@ struct AgentLoop {
         messages: [ChatMessage],
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws -> String {
-        try await container.perform { modelContext in
-            let chat = messages.map { message in
-                switch message.role {
-                case .system: Chat.Message.system(message.content)
-                case .user: Chat.Message.user(message.content)
-                case .assistant: Chat.Message.assistant(message.content)
-                case .tool: Chat.Message.tool(message.content)
-                }
-            }
-            let input = try await modelContext.processor.prepare(input: UserInput(chat: chat))
-            var output = ""
-            let stream = try MLXLMCommon.generate(
-                input: input,
-                parameters: GenerateParameters(maxTokens: 512, temperature: 0.2),
-                context: modelContext
-            )
-            for await generation in stream {
-                if case .chunk(let chunk) = generation {
-                    output += chunk
-                    onPartial(output)
-                }
-            }
-            return output
-        }
+        try await LLMGenerator.generate(container: container, messages: messages, onPartial: onPartial)
     }
 
-    private static func formattedNow() -> String {
+    static func formattedNow() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE yyyy-MM-dd HH:mm"
         return "\(formatter.string(from: Date())), \(TimeZone.current.identifier)"

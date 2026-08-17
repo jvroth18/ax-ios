@@ -54,6 +54,12 @@ struct SettingsView: View {
             Section("History") {
                 NavigationLink("Interaction history") { HistoryView() }
             }
+
+            #if DEBUG
+            Section("Developer") {
+                NavigationLink("Tool-call eval") { EvalView(modelManager: modelManager) }
+            }
+            #endif
         }
         .navigationTitle("Settings")
     }
