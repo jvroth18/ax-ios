@@ -50,10 +50,15 @@ struct VLMPlanner {
         Coordinates are fractions of screen width/height.
         """
 
+        guard let ciImage = CIImage(image: screenshot) else {
+            return .stuck(reason: "Could not read the screenshot")
+        }
         let output = try await container.perform { context in
-            let input = try await context.processor.prepare(
-                input: UserInput(chat: [.user(prompt, images: [.ciImage(CIImage(image: screenshot)!)])])
-            )
+            // Typed step-by-step: the one-liner overwhelms the expression checker.
+            let image: UserInput.Image = .ciImage(ciImage)
+            let message: Chat.Message = .user(prompt, images: [image])
+            let userInput = UserInput(chat: [message])
+            let input = try await context.processor.prepare(input: userInput)
             var text = ""
             let stream = try MLXLMCommon.generate(
                 input: input,
