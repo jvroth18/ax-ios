@@ -24,6 +24,10 @@ struct VLMPlanner {
         case stuck(reason: String)
     }
 
+    enum PlannerError: Error {
+        case badScreenshot
+    }
+
     let container: ModelContainer
 
     /// Loads the VLM. Caller must unload the text model first (single-resident-model rule).
@@ -50,11 +54,15 @@ struct VLMPlanner {
         Coordinates are fractions of screen width/height.
         """
 
-        guard let ciImage = CIImage(image: screenshot) else {
-            return .stuck(reason: "Could not read the screenshot")
+        // Only Sendable values may cross into container.perform; ship the screenshot
+        // as Data and rebuild the CIImage inside.
+        guard let pngData = screenshot.pngData() else {
+            return .stuck(reason: "Could not encode the screenshot")
         }
-        let output = try await container.perform { context in
-            // Typed step-by-step: the one-liner overwhelms the expression checker.
+        let output: String = try await container.perform { context in
+            guard let ciImage = CIImage(data: pngData) else {
+                throw PlannerError.badScreenshot
+            }
             let image: UserInput.Image = .ciImage(ciImage)
             let message: Chat.Message = .user(prompt, images: [image])
             let userInput = UserInput(chat: [message])
