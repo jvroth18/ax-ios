@@ -4,6 +4,8 @@ import MLX
 import MLXLMCommon
 import MLXLLM
 import MLXHuggingFace
+import HuggingFace  // HubClient, used inside the macro expansion
+import Tokenizers   // AutoTokenizer, used inside the macro expansion
 
 /// Downloads, loads, and unloads the on-device model. Enforces the single-resident-model
 /// rule: on an 8 GB iPhone only one large model may be in memory at a time.

@@ -11,6 +11,15 @@ packages:
     url: https://github.com/ml-explore/mlx-swift-lm
     # Pin: mlx-swift-lm moves fast; bump deliberately and retest memory/tok-s.
     exactVersion: 3.31.3
+  # The #huggingFaceLoadModelContainer macro expands to code using HubClient (module
+  # HuggingFace) and AutoTokenizer (module Tokenizers) at the call site, so the app
+  # links both directly.
+  SwiftHuggingFace:
+    url: https://github.com/huggingface/swift-huggingface
+    from: 0.9.0
+  SwiftTransformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: 1.3.0
   AXCore:
     path: Packages/AXCore
 
@@ -35,6 +44,10 @@ targets:
         product: MLXLMCommon
       - package: MLXSwiftLM
         product: MLXHuggingFace
+      - package: SwiftHuggingFace
+        product: HuggingFace
+      - package: SwiftTransformers
+        product: Tokenizers
       # MLXVLM is only used by the optional AXDriver module (AX_DRIVER flag);
       # SwiftPM links it lazily so including it here keeps one target simple.
       - package: MLXSwiftLM

@@ -5,6 +5,8 @@ import MLX
 import MLXLMCommon
 import MLXVLM
 import MLXHuggingFace
+import HuggingFace  // HubClient, used inside the macro expansion
+import Tokenizers   // AutoTokenizer, used inside the macro expansion
 import AXCore
 
 /// Decides the next UI action from a screenshot + goal using an on-device vision model.
