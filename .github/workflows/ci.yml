@@ -33,4 +33,6 @@ jobs:
             -project ax-ios.xcodeproj \
             -scheme AXAssistant \
             -destination 'generic/platform=iOS' \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO
