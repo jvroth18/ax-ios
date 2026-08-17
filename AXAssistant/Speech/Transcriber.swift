@@ -96,13 +96,15 @@ final class Transcriber: @unchecked Sendable {
         to analysisFormat: AVAudioFormat?
     ) -> AsyncStream<AnalyzerInput> {
         AsyncStream { continuation in
-            let converter: AVAudioConverter? = {
-                guard let inputFormat, let analysisFormat, inputFormat != analysisFormat else {
-                    return nil
-                }
-                return AVAudioConverter(from: inputFormat, to: analysisFormat)
-            }()
             let task = Task {
+                // Built inside the task: AVAudioConverter is not Sendable, so it must
+                // live entirely on this side of the sending boundary.
+                let converter: AVAudioConverter? = {
+                    guard let inputFormat, let analysisFormat, inputFormat != analysisFormat else {
+                        return nil
+                    }
+                    return AVAudioConverter(from: inputFormat, to: analysisFormat)
+                }()
                 for await buffer in source {
                     if let converter, let analysisFormat {
                         let ratio = analysisFormat.sampleRate / buffer.format.sampleRate

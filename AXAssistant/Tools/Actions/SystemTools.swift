@@ -33,8 +33,8 @@ struct OpenAppTool: AXTool {
             properties: [
                 "app": JSONSchema(
                     type: .string,
-                    description: "One of: \(knownApps.keys.sorted().joined(separator: ", "))",
-                    enumValues: knownApps.keys.sorted()
+                    description: "One of: \(OpenAppTool.knownApps.keys.sorted().joined(separator: ", "))",
+                    enumValues: OpenAppTool.knownApps.keys.sorted()
                 ),
             ],
             required: ["app"]

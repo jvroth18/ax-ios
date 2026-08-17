@@ -63,12 +63,13 @@ final class ModelManager {
             MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
 
             // The macro supplies the Hugging Face downloader + tokenizer loader (3.x API).
+            // (Helper method instead of inline enum shorthand: type inference doesn't
+            // reach into the macro expansion.)
             let container = try await #huggingFaceLoadModelContainer(
                 configuration: configuration(for: choice),
                 progressHandler: { [weak self] progress in
-                    Task { @MainActor in
-                        self?.state = .downloading(progress: progress.fractionCompleted)
-                    }
+                    let fraction = progress.fractionCompleted
+                    Task { @MainActor in self?.reportDownloadProgress(fraction) }
                 }
             )
             state = .loading
@@ -78,6 +79,10 @@ final class ModelManager {
         } catch {
             state = .failed(error.localizedDescription)
         }
+    }
+
+    private func reportDownloadProgress(_ fraction: Double) {
+        state = .downloading(progress: fraction)
     }
 
     private func configuration(for choice: ModelChoice) -> ModelConfiguration {
