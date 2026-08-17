@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import Hub
 import MLX
 import MLXLMCommon
 import MLXLLM
@@ -63,7 +62,6 @@ final class ModelManager {
             MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
 
             let container = try await LLMModelFactory.shared.loadContainer(
-                hub: HubApi(downloadBase: Self.hubCacheDirectory),
                 configuration: configuration(for: choice)
             ) { [weak self] progress in
                 Task { @MainActor in
@@ -116,8 +114,10 @@ final class ModelManager {
         return FileManager.default.fileExists(atPath: repoDir.path)
     }
 
+    /// swift-transformers' default HubApi download base. Deliberately in Documents so the
+    /// ~1 GB of weights is visible (and deletable) in the Files app.
     private static var hubCacheDirectory: URL? {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
             .first?.appendingPathComponent("huggingface")
     }
 }

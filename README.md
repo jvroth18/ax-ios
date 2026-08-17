@@ -47,7 +47,8 @@ another app's UI from an App Store build.
    ```
 3. Select your Personal Team under Signing & Capabilities, plug in your iPhone, ⌘R.
 4. On first launch the app downloads **Qwen3-1.7B-4bit (~1.1 GB)** from Hugging Face —
-   Wi-Fi recommended. Weights live in Application Support, excluded from iCloud backup.
+   Wi-Fi recommended. Weights live in the app's Documents folder (visible and deletable
+   in the Files app), excluded from iCloud backup.
 5. Assign the Action Button: **Settings → Action Button → Shortcut → Ask AX**.
 
 ## Roadmap
