@@ -28,6 +28,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Enable AX_DRIVER (app target only)
+        # A command-line SWIFT_ACTIVE_COMPILATION_CONDITIONS override would clobber
+        # every package's own conditions (breaks swift-crypto), so edit the spec instead.
+        if: matrix.flags != ''
+        run: sed -i '' 's/: DEBUG /: DEBUG AX_DRIVER /' project.yml
       - name: Generate project
         run: xcodegen generate
       - name: Build (unsigned)
@@ -38,5 +43,4 @@ jobs:
             -destination 'generic/platform=iOS' \
             -skipPackagePluginValidation \
             -skipMacroValidation \
-            SWIFT_ACTIVE_COMPILATION_CONDITIONS="DEBUG ${{ matrix.flags }}" \
             CODE_SIGNING_ALLOWED=NO
