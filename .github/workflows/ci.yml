@@ -16,11 +16,14 @@ jobs:
         run: swift test
 
   app-build-check:
-    name: AXAssistant compile check (no signing)
-    # Needs an image with Xcode 26 / iOS 26 SDK. Adjust the runner label as GitHub
-    # rolls images forward; non-blocking until the toolchain on hosted runners settles.
+    name: AXAssistant compile check (${{ matrix.flags || 'default' }})
     runs-on: macos-26
-    continue-on-error: true
+    # The AX_DRIVER leg is experimental and must not block merges.
+    continue-on-error: ${{ matrix.flags != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        flags: ["", "AX_DRIVER"]
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
@@ -35,4 +38,5 @@ jobs:
             -destination 'generic/platform=iOS' \
             -skipPackagePluginValidation \
             -skipMacroValidation \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS="DEBUG ${{ matrix.flags }}" \
             CODE_SIGNING_ALLOWED=NO

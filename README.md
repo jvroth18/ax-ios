@@ -53,8 +53,9 @@ another app's UI from an App Store build.
 
 ## Roadmap
 
-- [x] M0 — repo scaffold, AXCore (tool-call parser + prompt builder) with unit tests
-- [ ] M1 — model download + on-device chat
+- [x] M0 — repo scaffold, AXCore (tool-call parser + prompt builder) with unit tests;
+      full app compiles for iOS 26 in CI
+- [ ] M1 — model download + on-device chat (code complete, needs on-device validation)
 - [ ] M2 — voice pipeline + Action Button
 - [ ] M3 — tool-calling agent + initial action catalog
 - [ ] M4 — history, settings, Live Activity, onboarding
