@@ -1,0 +1,16 @@
+included:
+  - AXAssistant
+  - AXDriver
+  - Packages/AXCore/Sources
+
+disabled_rules:
+  - line_length          # long tool descriptions and prompts are fine
+  - todo
+
+opt_in_rules:
+  - empty_count
+  - sorted_first_last
+
+identifier_name:
+  min_length: 2
+  excluded: [x, y, i]

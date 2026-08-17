@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  axcore-tests:
+    name: AXCore unit tests (macOS)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run swift test
+        working-directory: Packages/AXCore
+        run: swift test
+
+  app-build-check:
+    name: AXAssistant compile check (no signing)
+    # Needs an image with Xcode 26 / iOS 26 SDK. Adjust the runner label as GitHub
+    # rolls images forward; non-blocking until the toolchain on hosted runners settles.
+    runs-on: macos-26
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Build (unsigned)
+        run: |
+          xcodebuild build \
+            -project ax-ios.xcodeproj \
+            -scheme AXAssistant \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO

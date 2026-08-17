@@ -1,0 +1,28 @@
+# AXDriver — experimental full-UI automation (sideload only)
+
+AXDriver lets AX see the screen and tap **any** app, using a WebDriverAgent (WDA) runner
+and an on-device vision model (Qwen2-VL-2B). It is the closest thing to "full control of
+the iPhone" that exists without a jailbreak.
+
+**Read this before building it:**
+
+- ❌ **Never distributable via the App Store or TestFlight.** WDA uses private XCTest
+  APIs. This module exists for people who build from source onto their own device.
+- 🔌 Starting the WDA runner reliably generally requires a **Mac tether**
+  (`xcrun devicectl device process launch …` or `xcodebuild test-without-building`).
+  Tapping its icon can work, but iOS may suspend it.
+- 📆 On a free developer account, the runner **expires every 7 days** and counts against
+  the 3-sideloaded-apps limit (AXAssistant + WDA runner = 2 of 3).
+- 🧠 2B-class vision models misread UIs regularly. Every step is logged on screen with a
+  stop button, and sessions are capped at 15 steps. Treat it as a research toy, not a
+  reliable automator.
+- 💾 Only one large model can be resident on an 8 GB device: AXAssistant unloads the text
+  model before loading the VLM.
+
+## Building
+
+1. Follow [WDA-SETUP.md](WDA-SETUP.md) to sign and install the WebDriverAgent runner.
+2. In `project.yml`, uncomment `SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) AX_DRIVER`
+   under the Debug config, then `xcodegen generate` and rebuild.
+3. Start the WDA runner (see setup doc), confirm `http://127.0.0.1:8100/status` in Safari
+   on the phone, then use the Driver screen in AX.

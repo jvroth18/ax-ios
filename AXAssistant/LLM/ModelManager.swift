@@ -1,0 +1,105 @@
+import Foundation
+import Observation
+import MLX
+import MLXLMCommon
+import MLXLLM
+
+/// Downloads, loads, and unloads the on-device model. Enforces the single-resident-model
+/// rule: on an 8 GB iPhone only one large model may be in memory at a time.
+@Observable @MainActor
+final class ModelManager {
+
+    enum ModelChoice: String, CaseIterable, Identifiable {
+        case qwen3_1_7b = "mlx-community/Qwen3-1.7B-4bit"
+        case qwen25_1_5b = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
+
+        var id: String { rawValue }
+        var displayName: String {
+            switch self {
+            case .qwen3_1_7b: return "Qwen3 1.7B (recommended)"
+            case .qwen25_1_5b: return "Qwen2.5 1.5B (smaller)"
+            }
+        }
+        var approximateSize: String {
+            switch self {
+            case .qwen3_1_7b: return "1.1 GB"
+            case .qwen25_1_5b: return "0.9 GB"
+            }
+        }
+    }
+
+    enum State {
+        case idle
+        case downloading(progress: Double)
+        case loading
+        case ready
+        case failed(String)
+    }
+
+    private(set) var state: State = .idle
+    private(set) var container: ModelContainer?
+
+    var choice: ModelChoice {
+        get { ModelChoice(rawValue: UserDefaults.standard.string(forKey: "modelChoice") ?? "") ?? .qwen3_1_7b }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "modelChoice") }
+    }
+
+    /// Loads silently at launch if weights are already on disk; otherwise stays idle so
+    /// ModelDownloadView can show the explicit download step (with size + Wi-Fi warning).
+    func loadIfDownloaded() async {
+        guard container == nil, isDownloaded(choice) else { return }
+        await load()
+    }
+
+    func downloadAndLoad() async {
+        await load()
+    }
+
+    private func load() async {
+        state = .downloading(progress: 0)
+        do {
+            // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
+            MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
+
+            let container = try await MLXLMCommon.loadModelContainer(
+                configuration: ModelConfiguration(id: choice.rawValue)
+            ) { [weak self] progress in
+                Task { @MainActor in
+                    self?.state = .downloading(progress: progress.fractionCompleted)
+                }
+            }
+            state = .loading
+            self.container = container
+            state = .ready
+        } catch {
+            state = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Called on memory warnings and before AXDriver loads its vision model.
+    func unload() {
+        container = nil
+        MLX.GPU.clearCache()
+        state = .idle
+    }
+
+    func deleteDownloadedModel() {
+        unload()
+        // Weights live in the Hub cache inside Application Support; removing the
+        // directory forces a fresh download next time.
+        if let dir = Self.hubCacheDirectory {
+            try? FileManager.default.removeItem(at: dir)
+        }
+    }
+
+    private func isDownloaded(_ choice: ModelChoice) -> Bool {
+        guard let dir = Self.hubCacheDirectory else { return false }
+        let repoDir = dir.appendingPathComponent("models/\(choice.rawValue)")
+        return FileManager.default.fileExists(atPath: repoDir.path)
+    }
+
+    private static var hubCacheDirectory: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first?.appendingPathComponent("huggingface")
+    }
+}
