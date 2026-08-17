@@ -44,7 +44,8 @@ struct RemindersTool: AXTool {
 
 extension ISO8601DateFormatter {
     /// Accepts both "2026-08-17T17:00:00" (no zone — treated as local) and full ISO forms.
-    static let lenient: ISO8601DateFormatter = {
+    /// ISO8601DateFormatter is documented thread-safe; options are never mutated after init.
+    nonisolated(unsafe) static let lenient: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         formatter.timeZone = .current

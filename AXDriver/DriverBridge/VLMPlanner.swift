@@ -25,7 +25,7 @@ struct VLMPlanner {
 
     /// Loads the VLM. Caller must unload the text model first (single-resident-model rule).
     static func load() async throws -> VLMPlanner {
-        let container = try await MLXLMCommon.loadModelContainer(
+        let container = try await VLMModelFactory.shared.loadContainer(
             configuration: ModelConfiguration(id: modelID)
         )
         return VLMPlanner(container: container)

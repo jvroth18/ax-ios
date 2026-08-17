@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import Hub
 import MLX
 import MLXLMCommon
 import MLXLLM
@@ -61,8 +62,9 @@ final class ModelManager {
             // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
             MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
 
-            let container = try await MLXLMCommon.loadModelContainer(
-                configuration: ModelConfiguration(id: choice.rawValue)
+            let container = try await LLMModelFactory.shared.loadContainer(
+                hub: HubApi(downloadBase: Self.hubCacheDirectory),
+                configuration: configuration(for: choice)
             ) { [weak self] progress in
                 Task { @MainActor in
                     self?.state = .downloading(progress: progress.fractionCompleted)
@@ -70,10 +72,26 @@ final class ModelManager {
             }
             state = .loading
             self.container = container
+            excludeWeightsFromBackup()
             state = .ready
         } catch {
             state = .failed(error.localizedDescription)
         }
+    }
+
+    private func configuration(for choice: ModelChoice) -> ModelConfiguration {
+        switch choice {
+        case .qwen3_1_7b: return LLMRegistry.qwen3_1_7b_4bit
+        case .qwen25_1_5b: return ModelConfiguration(id: choice.rawValue)
+        }
+    }
+
+    /// Weights are re-downloadable; don't let them bloat the user's iCloud backup.
+    private func excludeWeightsFromBackup() {
+        guard var dir = Self.hubCacheDirectory else { return }
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? dir.setResourceValues(values)
     }
 
     /// Called on memory warnings and before AXDriver loads its vision model.
