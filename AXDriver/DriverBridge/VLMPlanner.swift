@@ -4,6 +4,7 @@ import UIKit
 import MLX
 import MLXLMCommon
 import MLXVLM
+import MLXHuggingFace
 import AXCore
 
 /// Decides the next UI action from a screenshot + goal using an on-device vision model.
@@ -24,8 +25,9 @@ struct VLMPlanner {
     let container: ModelContainer
 
     /// Loads the VLM. Caller must unload the text model first (single-resident-model rule).
+    /// The macro's factory registry routes VLM configurations to the VLM factory.
     static func load() async throws -> VLMPlanner {
-        let container = try await VLMModelFactory.shared.loadContainer(
+        let container = try await #huggingFaceLoadModelContainer(
             configuration: ModelConfiguration(id: modelID)
         )
         return VLMPlanner(container: container)

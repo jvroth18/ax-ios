@@ -33,6 +33,8 @@ targets:
         product: MLXLLM
       - package: MLXSwiftLM
         product: MLXLMCommon
+      - package: MLXSwiftLM
+        product: MLXHuggingFace
       # MLXVLM is only used by the optional AXDriver module (AX_DRIVER flag);
       # SwiftPM links it lazily so including it here keeps one target simple.
       - package: MLXSwiftLM

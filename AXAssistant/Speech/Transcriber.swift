@@ -4,7 +4,9 @@ import Speech
 /// On-device speech-to-text using the iOS 26 SpeechAnalyzer / SpeechTranscriber API.
 /// The OS downloads and manages the locale's transcription model via AssetInventory —
 /// nothing ships in the app bundle and no audio ever leaves the device.
-final class Transcriber {
+/// @unchecked Sendable: analyzer/silenceTask are only touched from the transcribe task
+/// and stop(), which the VoiceSession serializes.
+final class Transcriber: @unchecked Sendable {
 
     struct Update {
         let text: String

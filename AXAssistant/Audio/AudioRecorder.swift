@@ -4,7 +4,9 @@ import Speech
 /// Captures microphone audio via AVAudioEngine as raw PCM buffers (in the input node's
 /// native format — the Transcriber converts to the analyzer's preferred format). Also
 /// computes a rolling RMS level for the waveform UI and silence detection.
-final class AudioRecorder {
+/// @unchecked Sendable: currentLevel is a torn-read-tolerant level meter; engine state is
+/// only touched from start()/stop().
+final class AudioRecorder: @unchecked Sendable {
     private let engine = AVAudioEngine()
     private var continuation: AsyncStream<AVAudioPCMBuffer>.Continuation?
 

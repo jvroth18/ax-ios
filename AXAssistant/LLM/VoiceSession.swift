@@ -75,6 +75,16 @@ final class VoiceSession {
         }
     }
 
+    /// Entry point for typed (non-voice) requests from ChatView.
+    func respondToTyped(_ text: String) async {
+        transcript = text
+        do {
+            try await respond(to: text)
+        } catch {
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
     func cancel() {
         task?.cancel()
         transcriber.stop()

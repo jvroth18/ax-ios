@@ -3,6 +3,7 @@ import Observation
 import MLX
 import MLXLMCommon
 import MLXLLM
+import MLXHuggingFace
 
 /// Downloads, loads, and unloads the on-device model. Enforces the single-resident-model
 /// rule: on an 8 GB iPhone only one large model may be in memory at a time.
@@ -61,13 +62,15 @@ final class ModelManager {
             // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
             MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
 
-            let container = try await LLMModelFactory.shared.loadContainer(
-                configuration: configuration(for: choice)
-            ) { [weak self] progress in
-                Task { @MainActor in
-                    self?.state = .downloading(progress: progress.fractionCompleted)
+            // The macro supplies the Hugging Face downloader + tokenizer loader (3.x API).
+            let container = try await #huggingFaceLoadModelContainer(
+                configuration: configuration(for: choice),
+                progressHandler: { [weak self] progress in
+                    Task { @MainActor in
+                        self?.state = .downloading(progress: progress.fractionCompleted)
+                    }
                 }
-            }
+            )
             state = .loading
             self.container = container
             excludeWeightsFromBackup()
