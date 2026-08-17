@@ -24,10 +24,6 @@ struct VLMPlanner {
         case stuck(reason: String)
     }
 
-    enum PlannerError: Error {
-        case badScreenshot
-    }
-
     let container: ModelContainer
 
     /// Loads the VLM. Caller must unload the text model first (single-resident-model rule).
@@ -54,30 +50,16 @@ struct VLMPlanner {
         Coordinates are fractions of screen width/height.
         """
 
-        // Only Sendable values may cross into container.perform; ship the screenshot
-        // as Data and rebuild the CIImage inside.
-        guard let pngData = screenshot.pngData() else {
-            return .stuck(reason: "Could not encode the screenshot")
+        guard let ciImage = CIImage(image: screenshot) else {
+            return .stuck(reason: "Could not read the screenshot")
         }
-        let output: String = try await container.perform { context in
-            guard let ciImage = CIImage(data: pngData) else {
-                throw PlannerError.badScreenshot
-            }
-            let image: UserInput.Image = .ciImage(ciImage)
-            let message: Chat.Message = .user(prompt, images: [image])
-            let userInput = UserInput(chat: [message])
-            let input = try await context.processor.prepare(input: userInput)
-            var text = ""
-            let stream = try MLXLMCommon.generate(
-                input: input,
-                parameters: GenerateParameters(maxTokens: 128, temperature: 0.1),
-                context: context
-            )
-            for await generation in stream {
-                if case .chunk(let chunk) = generation { text += chunk }
-            }
-            return text
-        }
+        // ChatSession wraps prepare+generate; a fresh session per step is correct because
+        // the prompt already carries the step log.
+        let session = ChatSession(
+            container,
+            generateParameters: GenerateParameters(maxTokens: 128, temperature: 0.1)
+        )
+        let output = try await session.respond(to: prompt, image: .ciImage(ciImage))
         return try Self.parse(output)
     }
 
