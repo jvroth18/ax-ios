@@ -21,6 +21,7 @@ struct ToolRegistry: Sendable {
         MessageTool(),
         OpenAppTool(),
         OpenURLTool(),
+        TimerTool(),
         FlashlightTool(),
         MusicTool(),
         ShortcutTool(),

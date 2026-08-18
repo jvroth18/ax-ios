@@ -63,6 +63,7 @@ targets:
         NSCalendarsFullAccessUsageDescription: AX creates and reads calendar events you ask about.
         NSContactsUsageDescription: AX looks up contacts so it can call or message the right person.
         NSAppleMusicUsageDescription: AX plays music you ask for.
+        NSAlarmKitUsageDescription: AX sets timers that alert you even in silent mode or Focus.
         LSApplicationQueriesSchemes: [shortcuts, tel, sms]
         CFBundleURLTypes:
           - CFBundleURLName: dev.ax.assistant

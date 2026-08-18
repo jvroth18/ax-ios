@@ -39,6 +39,11 @@ struct EvalCase: Identifiable {
             expectedArgs: ["action": "pause"]
         ),
         EvalCase(
+            transcript: "Set a timer for 10 minutes",
+            expectedTool: "set_timer",
+            expectedArgs: ["minutes": "10"]
+        ),
+        EvalCase(
             transcript: "Open Maps",
             expectedTool: "open_app",
             expectedArgs: ["app": "maps"]
@@ -155,8 +160,15 @@ struct EvalView: View {
         guard call.name == evalCase.expectedTool else { return .wrongTool(call.name) }
         for (key, expected) in evalCase.expectedArgs {
             guard let value = call.arguments[key] else { return .wrongArgs("missing \(key)") }
-            if let expected, value.stringValue?.lowercased() != expected.lowercased() {
-                return .wrongArgs("\(key)=\(value.stringValue ?? "?") ≠ \(expected)")
+            if let expected {
+                let actual = value.stringValue
+                    ?? value.numberValue.map { number in
+                        number == number.rounded() ? String(Int(number)) : String(number)
+                    }
+                    ?? "?"
+                if actual.lowercased() != expected.lowercased() {
+                    return .wrongArgs("\(key)=\(actual) ≠ \(expected)")
+                }
             }
         }
         return .pass

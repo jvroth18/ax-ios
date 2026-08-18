@@ -58,6 +58,9 @@ struct SettingsView: View {
             #if DEBUG
             Section("Developer") {
                 NavigationLink("Tool-call eval") { EvalView(modelManager: modelManager) }
+                #if AX_DRIVER
+                NavigationLink("Driver (experimental)") { DriverView(modelManager: modelManager) }
+                #endif
             }
             #endif
         }
