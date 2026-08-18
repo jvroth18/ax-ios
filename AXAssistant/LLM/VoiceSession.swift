@@ -1,32 +1,29 @@
 import Foundation
 import Observation
 import AXCore
-import AVFoundation
 
-/// One Action-Button interaction: record → transcribe → agent loop → (optionally) speak.
+/// One Action-Button recording: capture → transcribe → hand off to the Conversation.
+/// All model work, history, confirmation, and speech output live in Conversation.
 @Observable @MainActor
 final class VoiceSession {
 
     enum Phase: Equatable {
         case recording(partial: String)
-        case thinking(partial: String)
-        case done(reply: String)
+        case handedOff
         case failed(String)
     }
 
     private(set) var phase: Phase = .recording(partial: "")
-    var transcript: String = ""
+    private(set) var transcript: String = ""
 
+    private let conversation: Conversation
     private let modelManager: ModelManager
     private let appState: AppState
     private let transcriber = Transcriber()
-    private let synthesizer = AVSpeechSynthesizer()
     private var task: Task<Void, Never>?
 
-    /// Bridges ConfirmSheet: set by ChatView, awaited by the agent loop.
-    var pendingConfirmation: (call: ToolCall, spec: ToolSpec, resume: (Bool) -> Void)?
-
-    init(modelManager: ModelManager, appState: AppState) {
+    init(conversation: Conversation, modelManager: ModelManager, appState: AppState) {
+        self.conversation = conversation
         self.modelManager = modelManager
         self.appState = appState
     }
@@ -46,7 +43,8 @@ final class VoiceSession {
                     appState.mode = .idle
                     return
                 }
-                try await respond(to: transcript)
+                phase = .handedOff
+                await conversation.send(transcript, modelManager: modelManager, appState: appState)
             } catch {
                 phase = .failed(error.localizedDescription)
                 appState.mode = .idle
@@ -54,53 +52,9 @@ final class VoiceSession {
         }
     }
 
-    func respond(to text: String) async throws {
-        appState.mode = .thinking
-        phase = .thinking(partial: "")
-
-        guard let container = modelManager.container else {
-            throw NSError(domain: "AX", code: 1, userInfo: [NSLocalizedDescriptionKey: "Model not loaded"])
-        }
-        let loop = AgentLoop(container: container, registry: .standard, confirmer: self)
-        let turn = try await loop.run(userText: text) { partial in
-            Task { @MainActor [weak self] in self?.phase = .thinking(partial: partial) }
-        }
-
-        phase = .done(reply: turn.reply)
-        appState.mode = .idle
-        HistoryStore.record(transcript: text, turn: turn)
-
-        if appState.settings.speakReplies, !turn.reply.isEmpty {
-            synthesizer.speak(AVSpeechUtterance(string: turn.reply))
-        }
-    }
-
-    /// Entry point for typed (non-voice) requests from ChatView.
-    func respondToTyped(_ text: String) async {
-        transcript = text
-        do {
-            try await respond(to: text)
-        } catch {
-            phase = .failed(error.localizedDescription)
-        }
-    }
-
     func cancel() {
         task?.cancel()
         transcriber.stop()
         appState.mode = .idle
-    }
-}
-
-extension VoiceSession: AgentLoop.Confirmer {
-    func confirm(call: ToolCall, spec: ToolSpec) async -> Bool {
-        appState.mode = .awaitingConfirmation
-        return await withCheckedContinuation { continuation in
-            pendingConfirmation = (call, spec, { approved in
-                self.pendingConfirmation = nil
-                self.appState.mode = .thinking
-                continuation.resume(returning: approved)
-            })
-        }
     }
 }

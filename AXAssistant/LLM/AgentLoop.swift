@@ -24,15 +24,20 @@ struct AgentLoop {
         let toolResults: [ToolResult]
     }
 
-    func run(userText: String, onPartial: @escaping @Sendable (String) -> Void) async throws -> Turn {
+    func run(
+        history: [ChatMessage] = [],
+        userText: String,
+        onPartial: @escaping @Sendable (String) -> Void
+    ) async throws -> Turn {
         let context = PromptBuilder.Context(
             currentDateTime: Self.formattedNow(),
             registeredShortcuts: await MainActor.run { AppState.shared.settings.registeredShortcuts }
         )
         var messages: [ChatMessage] = [
-            .init(role: .system, content: PromptBuilder.systemPrompt(tools: registry.specs, context: context)),
-            .init(role: .user, content: userText),
+            .init(role: .system, content: PromptBuilder.systemPrompt(tools: registry.specs, context: context))
         ]
+        messages.append(contentsOf: history)
+        messages.append(.init(role: .user, content: userText))
 
         var allCalls: [ToolCall] = []
         var allResults: [ToolResult] = []

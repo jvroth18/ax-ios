@@ -4,6 +4,7 @@ struct RootView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhase
     private let modelManager = ModelManager.shared
+    @State private var conversation = Conversation()
     @State private var session: VoiceSession?
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
@@ -12,7 +13,7 @@ struct RootView: View {
             Group {
                 switch modelManager.state {
                 case .ready:
-                    ChatView(modelManager: modelManager, session: $session)
+                    ChatView(modelManager: modelManager, conversation: conversation, session: $session)
                 default:
                     ModelDownloadView(modelManager: modelManager)
                 }
@@ -36,7 +37,7 @@ struct RootView: View {
     private func startListening() {
         guard case .ready = modelManager.state else { return }
         session?.cancel()
-        session = VoiceSession(modelManager: modelManager, appState: appState)
+        session = VoiceSession(conversation: conversation, modelManager: modelManager, appState: appState)
         session?.start()
     }
 }

@@ -4,26 +4,46 @@ import AXCore
 struct ChatView: View {
     @Environment(AppState.self) private var appState
     let modelManager: ModelManager
+    let conversation: Conversation
     @Binding var session: VoiceSession?
     @State private var typedInput = ""
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let session {
-                        SessionTranscriptView(session: session)
-                    } else {
-                        ContentUnavailableView(
-                            "Press your Action Button",
-                            systemImage: "waveform.circle",
-                            description: Text("Or type below. Assign the Action Button in Settings > Action Button > Shortcut > Ask AX.")
-                        )
-                        .padding(.top, 60)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 10) {
+                        if conversation.messages.isEmpty && conversation.thinkingPartial == nil {
+                            ContentUnavailableView(
+                                "Press your Action Button",
+                                systemImage: "waveform.circle",
+                                description: Text("Or type below. Assign the Action Button in Settings > Action Button > Shortcut > Ask AX.")
+                            )
+                            .padding(.top, 60)
+                        }
+                        ForEach(conversation.messages) { message in
+                            MessageBubble(message: message)
+                        }
+                        if let partial = conversation.thinkingPartial {
+                            Text(partial.isEmpty ? "…" : partial)
+                                .foregroundStyle(.secondary)
+                                .padding(10)
+                                .id("thinking")
+                        }
+                        if case .failed(let why) = session?.phase {
+                            Label(why, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.red)
+                                .font(.callout)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                }
+                .onChange(of: conversation.messages) { _, messages in
+                    if let last = messages.last {
+                        withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
             }
 
             if case .listening = appState.mode {
@@ -31,17 +51,24 @@ struct ChatView: View {
             }
 
             HStack {
-                TextField("Type a request…", text: $typedInput)
+                TextField("Type a request…", text: $typedInput, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(submitTyped)
                 Button(action: startVoice) {
                     Image(systemName: "mic.circle.fill").font(.title)
                 }
+                .disabled(appState.mode != .idle)
             }
             .padding()
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Clear", systemImage: "square.and.pencil") { conversation.clear() }
+                    .disabled(conversation.messages.isEmpty)
+            }
+        }
         .sheet(isPresented: confirmationPresented) {
-            if let pending = session?.pendingConfirmation {
+            if let pending = conversation.pendingConfirmation {
                 ConfirmSheet(call: pending.call, spec: pending.spec, resume: pending.resume)
             }
         }
@@ -49,57 +76,46 @@ struct ChatView: View {
 
     private var confirmationPresented: Binding<Bool> {
         Binding(
-            get: { session?.pendingConfirmation != nil },
+            get: { conversation.pendingConfirmation != nil },
             set: { presented in
-                if !presented { session?.pendingConfirmation?.resume(false) }
+                if !presented { conversation.pendingConfirmation?.resume(false) }
             }
         )
     }
 
     private func startVoice() {
         session?.cancel()
-        session = VoiceSession(modelManager: modelManager, appState: appState)
+        session = VoiceSession(conversation: conversation, modelManager: modelManager, appState: appState)
         session?.start()
     }
 
     private func submitTyped() {
-        guard !typedInput.isEmpty else { return }
-        // Reuse the voice pipeline minus recording: create a session and inject text.
-        session?.cancel()
-        let newSession = VoiceSession(modelManager: modelManager, appState: appState)
-        newSession.transcript = typedInput
-        session = newSession
-        let text = typedInput
+        let text = typedInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, appState.mode == .idle else { return }
         typedInput = ""
-        Task { await newSession.respondToTyped(text) }
+        Task { await conversation.send(text, modelManager: modelManager, appState: appState) }
     }
 }
 
-private struct SessionTranscriptView: View {
-    let session: VoiceSession
+private struct MessageBubble: View {
+    let message: Conversation.DisplayMessage
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if !session.transcript.isEmpty {
-                Text(session.transcript)
-                    .padding(10)
-                    .background(.blue.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
-            }
-            switch session.phase {
-            case .recording:
-                EmptyView()
-            case .thinking(let partial):
-                Text(partial.isEmpty ? "…" : partial)
-                    .foregroundStyle(.secondary)
-                    .padding(10)
-            case .done(let reply):
-                Text(reply)
-                    .padding(10)
-                    .background(.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-            case .failed(let message):
-                Label(message, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-            }
+        switch message.role {
+        case .user:
+            Text(message.text)
+                .padding(10)
+                .background(.blue.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        case .assistant:
+            Text(message.text)
+                .padding(10)
+                .background(.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        case .tool:
+            Label(message.text, systemImage: "wrench.and.screwdriver")
+                .font(.caption)
+                .foregroundStyle(.orange)
         }
     }
 }
