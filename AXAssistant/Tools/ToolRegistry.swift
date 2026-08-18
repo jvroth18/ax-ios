@@ -11,19 +11,32 @@ struct ToolRegistry: Sendable {
         tools.first { $0.spec.name == name }
     }
 
-    /// The default catalog. Every tool here works with free-account entitlements.
-    static let standard = ToolRegistry(tools: [
-        RemindersTool(),
-        CalendarCreateTool(),
-        CalendarReadTool(),
-        ContactsTool(),
-        CallTool(),
-        MessageTool(),
-        OpenAppTool(),
-        OpenURLTool(),
-        TimerTool(),
-        FlashlightTool(),
-        MusicTool(),
-        ShortcutTool(),
-    ])
+    /// The default catalog, rebuilt per request: http_request's spec embeds the live
+    /// connector allowlist. Every tool here works with free-account entitlements.
+    @MainActor
+    static var standard: ToolRegistry {
+        var tools: [any AXTool] = [
+            RemindersTool(),
+            CalendarCreateTool(),
+            CalendarReadTool(),
+            ContactsTool(),
+            CallTool(),
+            MessageTool(),
+            OpenAppTool(),
+            OpenURLTool(),
+            TimerTool(),
+            FlashlightTool(),
+            MusicTool(),
+            ShortcutTool(),
+        ]
+        if !AppState.shared.settings.endpointConnectors.isEmpty {
+            tools.append(HTTPRequestTool())
+        }
+        #if AX_DRIVER
+        if !AppState.shared.settings.appSummaryConnectors.isEmpty {
+            tools.append(SummarizeAppTool())
+        }
+        #endif
+        return ToolRegistry(tools: tools)
+    }
 }

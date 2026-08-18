@@ -11,6 +11,9 @@ import Tokenizers   // AutoTokenizer, used inside the macro expansion
 /// rule: on an 8 GB iPhone only one large model may be in memory at a time.
 @Observable @MainActor
 final class ModelManager {
+    /// Single shared instance: tools (e.g. the driver's summarize_app) must be able to
+    /// unload the text model to honor the single-resident-model rule.
+    static let shared = ModelManager()
 
     enum ModelChoice: String, CaseIterable, Identifiable {
         case qwen3_1_7b = "mlx-community/Qwen3-1.7B-4bit"

@@ -75,7 +75,9 @@ another app's UI from an App Store build.
 
 - Tools are declared `.safe` or `.confirm`; `.confirm` actions (calendar writes, calls,
   running Shortcuts) always show a confirmation sheet before executing.
-- The model can only run Shortcuts you explicitly register by name in Settings.
+- The model can only run Shortcuts you explicitly register by name in Settings, and can
+  only call HTTPS endpoints you registered in Settings > Connectors — by name, never by
+  raw URL.
 - Every action is logged to on-device history.
 
 ## Contributing

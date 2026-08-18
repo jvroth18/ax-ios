@@ -53,6 +53,15 @@ struct WDAClient {
         try await postSession("/wda/homescreen", body: [:] as [String: String])
     }
 
+    /// One screenful upward scroll (drag from lower-middle to upper-middle).
+    func scrollUp(screenWidth: Double, screenHeight: Double) async throws {
+        try await postSession("/wda/dragfromtoforduration", body: [
+            "fromX": screenWidth / 2, "fromY": screenHeight * 0.75,
+            "toX": screenWidth / 2, "toY": screenHeight * 0.25,
+            "duration": 0.3,
+        ])
+    }
+
     enum WDAError: Error {
         case noSession
         case badScreenshot

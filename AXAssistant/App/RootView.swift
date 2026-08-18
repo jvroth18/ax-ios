@@ -3,7 +3,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhase
-    @State private var modelManager = ModelManager()
+    private let modelManager = ModelManager.shared
     @State private var session: VoiceSession?
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 

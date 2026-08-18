@@ -51,6 +51,12 @@ struct SettingsView: View {
                 Text("AX can only run Shortcuts you list here, and always asks before running one. Names must match the Shortcuts app exactly.")
             }
 
+            Section {
+                NavigationLink("Connectors") { ConnectorsView() }
+            } footer: {
+                Text("Endpoints and app-summary tasks AX can use by voice.")
+            }
+
             Section("History") {
                 NavigationLink("Interaction history") { HistoryView() }
             }

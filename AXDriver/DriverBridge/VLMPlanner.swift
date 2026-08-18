@@ -63,6 +63,16 @@ struct VLMPlanner {
         return try Self.parse(output)
     }
 
+    /// Plain screenshot comprehension (no action planning) — the Path-2 read workflows.
+    func describe(prompt: String, screenshot: UIImage) async throws -> String {
+        guard let ciImage = CIImage(image: screenshot) else { return "" }
+        let session = ChatSession(
+            container,
+            generateParameters: GenerateParameters(maxTokens: 256, temperature: 0.2)
+        )
+        return try await session.respond(to: prompt, image: .ciImage(ciImage))
+    }
+
     static func parse(_ output: String) throws -> Action {
         // Take the first {...} in the output; small VLMs often add stray prose.
         guard let start = output.firstIndex(of: "{"), let end = output.lastIndex(of: "}") else {

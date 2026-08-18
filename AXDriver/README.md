@@ -1,8 +1,14 @@
 # AXDriver — experimental full-UI automation (sideload only)
 
-AXDriver lets AX see the screen and tap **any** app, using a WebDriverAgent (WDA) runner
-and an on-device vision model (Qwen2-VL-2B). It is the closest thing to "full control of
-the iPhone" that exists without a jailbreak.
+AXDriver lets AX see the screen of **any** app, using a WebDriverAgent (WDA) runner
+and an on-device vision model (Qwen2-VL-2B). It has two modes:
+
+- **Read mode (`summarize_app` tool)** — "open X and read me my notifications": launches
+  an app, screenshots (with optional scrolls), and the vision model summarizes what it
+  sees. Configured per-app in Settings > Connectors. This is the *realistic* mode:
+  comprehension is far more forgiving than precise tapping for a 2B model.
+- **Act mode (Driver screen)** — full observe→decide→tap automation. Treat as a research
+  demo; grounding accuracy at 2B is hit-or-miss.
 
 **Read this before building it:**
 

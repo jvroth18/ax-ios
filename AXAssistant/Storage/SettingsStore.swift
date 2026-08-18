@@ -13,11 +13,30 @@ final class SettingsStore {
     var registeredShortcuts: [String] {
         didSet { UserDefaults.standard.set(registeredShortcuts, forKey: "registeredShortcuts") }
     }
+    var endpointConnectors: [EndpointConnector] {
+        didSet { Self.saveJSON(endpointConnectors, key: "endpointConnectors") }
+    }
+    var appSummaryConnectors: [AppSummaryConnector] {
+        didSet { Self.saveJSON(appSummaryConnectors, key: "appSummaryConnectors") }
+    }
 
     init() {
         let defaults = UserDefaults.standard
         speakReplies = defaults.object(forKey: "speakReplies") as? Bool ?? true
         silenceTimeout = defaults.object(forKey: "silenceTimeout") as? Double ?? 1.2
         registeredShortcuts = defaults.stringArray(forKey: "registeredShortcuts") ?? []
+        endpointConnectors = Self.loadJSON(key: "endpointConnectors") ?? []
+        appSummaryConnectors = Self.loadJSON(key: "appSummaryConnectors") ?? []
+    }
+
+    private static func saveJSON<T: Encodable>(_ value: T, key: String) {
+        if let data = try? JSONEncoder().encode(value) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private static func loadJSON<T: Decodable>(key: String) -> T? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 }

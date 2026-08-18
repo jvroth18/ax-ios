@@ -63,6 +63,11 @@ struct AgentLoop {
                 let result = await execute(call)
                 allCalls.append(call)
                 allResults.append(result)
+                // Turn-ending tools (e.g. summarize_app, which swaps models in memory)
+                // speak their result directly instead of another model round-trip.
+                if let tool = registry.tool(named: call.name), tool.endsTurn, result.success {
+                    return Turn(reply: result.content, toolCalls: allCalls, toolResults: allResults)
+                }
                 messages.append(.init(role: .tool, content: PromptBuilder.toolResponse(result)))
             }
         }
