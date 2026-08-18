@@ -17,18 +17,24 @@ final class ModelManager {
 
     enum ModelChoice: String, CaseIterable, Identifiable {
         case qwen3_1_7b = "mlx-community/Qwen3-1.7B-4bit"
+        case qwen3_4b = "mlx-community/Qwen3-4B-4bit"
+        case qwen3_8b = "mlx-community/Qwen3-8B-4bit"
         case qwen25_1_5b = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
 
         var id: String { rawValue }
         var displayName: String {
             switch self {
-            case .qwen3_1_7b: return "Qwen3 1.7B (recommended)"
-            case .qwen25_1_5b: return "Qwen2.5 1.5B (smaller)"
+            case .qwen3_1_7b: return "Qwen3 1.7B (fastest, recommended)"
+            case .qwen3_4b: return "Qwen3 4B (smarter, slower)"
+            case .qwen3_8b: return "Qwen3 8B (12 GB Pro devices only)"
+            case .qwen25_1_5b: return "Qwen2.5 1.5B (smallest)"
             }
         }
         var approximateSize: String {
             switch self {
             case .qwen3_1_7b: return "1.1 GB"
+            case .qwen3_4b: return "2.3 GB"
+            case .qwen3_8b: return "4.6 GB"
             case .qwen25_1_5b: return "0.9 GB"
             }
         }
@@ -94,6 +100,8 @@ final class ModelManager {
     private func configuration(for choice: ModelChoice) -> ModelConfiguration {
         switch choice {
         case .qwen3_1_7b: return LLMRegistry.qwen3_1_7b_4bit
+        case .qwen3_4b: return LLMRegistry.qwen3_4b_4bit
+        case .qwen3_8b: return LLMRegistry.qwen3_8b_4bit
         case .qwen25_1_5b: return ModelConfiguration(id: choice.rawValue)
         }
     }
