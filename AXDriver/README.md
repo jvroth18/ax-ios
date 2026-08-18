@@ -19,6 +19,14 @@ the iPhone" that exists without a jailbreak.
 - 💾 Only one large model can be resident on an 8 GB device: AXAssistant unloads the text
   model before loading the VLM.
 
+## Known issue
+
+The `AX_DRIVER` CI leg currently fails on a Swift compiler bug ("failed to produce
+diagnostic for expression") in `VLMPlanner.nextAction` — three structurally different
+versions of the model call all trigger it on the Xcode 26 CI toolchain. Needs
+interactive diagnosis in Xcode; tracked for M5. The default (non-driver) build is
+unaffected and fully green.
+
 ## Building
 
 1. Follow [WDA-SETUP.md](WDA-SETUP.md) to sign and install the WebDriverAgent runner.
