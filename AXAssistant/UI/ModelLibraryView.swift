@@ -4,13 +4,12 @@ import SwiftUI
 /// it's for. Load switches to it, Get downloads it, Remove deletes its weights.
 struct ModelLibraryView: View {
     let modelManager: ModelManager
-    @Environment(\.dismiss) private var dismiss
+    let onClose: () -> Void
+    let onMinimize: () -> Void
     @State private var pendingDelete: CatalogModel?
 
     var body: some View {
-        ZStack {
-            W95Desktop()
-            W95Window(title: "Model Library", onClose: { dismiss() }) {
+        W95Window(title: "Model Library", onClose: onClose, onMinimize: onMinimize) {
                 VStack(spacing: 4) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 12) {
@@ -28,10 +27,7 @@ struct ModelLibraryView: View {
                 }
                 .padding(4)
                 .background(W95.face)
-            }
-            .padding(6)
         }
-        .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog(
             "Remove \(pendingDelete?.name ?? "")?",
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
@@ -63,6 +59,7 @@ struct ModelLibraryView: View {
                     isDownloaded: modelManager.isDownloaded(model),
                     isBusy: isBusy,
                     downloadFraction: modelManager.downloadProgress[model.id],
+                    downloadError: modelManager.downloadErrors[model.id],
                     onGet: { modelManager.download(model) },
                     onCancel: { modelManager.cancelDownload(of: model) },
                     onLoad: { Task { await modelManager.switchTo(model) } },
@@ -108,6 +105,7 @@ private struct ModelRow: View {
     let isDownloaded: Bool
     let isBusy: Bool
     let downloadFraction: Double?
+    let downloadError: String?
     let onGet: () -> Void
     let onCancel: () -> Void
     let onLoad: () -> Void
@@ -148,6 +146,12 @@ private struct ModelRow: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
+            }
+            if let downloadError {
+                Text("✗ Download failed: \(downloadError) — Get resumes from what finished.")
+                    .font(W95.ui(10))
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let fraction = downloadFraction {
                 HStack(spacing: 8) {

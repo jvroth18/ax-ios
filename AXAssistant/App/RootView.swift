@@ -1,11 +1,29 @@
 import SwiftUI
 
+/// The Windows-95 shell: a permanent desktop, windows that open instantly on top of
+/// it, and an always-present taskbar. No iOS navigation pushes, no slide animations,
+/// no swipe-back — windows are opened, activated, minimized, and closed.
 struct RootView: View {
-    enum Dest: Hashable {
-        case library, monitor, settings
-        #if DEBUG
-        case eval
-        #endif
+    enum AppWindow: String, CaseIterable, Identifiable {
+        case chat, library, monitor, settings
+
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .chat: return "AX"
+            case .library: return "Model Library"
+            case .monitor: return "System Monitor"
+            case .settings: return "Settings"
+            }
+        }
+        var glyph: String {
+            switch self {
+            case .chat: return "🖥️"
+            case .library: return "💾"
+            case .monitor: return "📈"
+            case .settings: return "⚙️"
+            }
+        }
     }
 
     @Environment(AppState.self) private var appState
@@ -13,56 +31,26 @@ struct RootView: View {
     private let modelManager = ModelManager.shared
     @State private var conversation = Conversation()
     @State private var session: VoiceSession?
-    @State private var path = NavigationPath()
     @State private var openMenu: String?
-    @State private var minimized = false
+    /// Open windows in open-order (their taskbar buttons), and the one on top.
+    /// active == nil with windows open means "everything minimized" — bare desktop.
+    @State private var openWindows: [AppWindow] = [.chat]
+    @State private var active: AppWindow? = .chat
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
-        NavigationStack(path: $path) {
-            ZStack {
+        VStack(spacing: 0) {
+            ZStack(alignment: .topLeading) {
                 W95Desktop()
-                if minimized {
-                    desktop
-                } else {
-                    W95Window(
-                        title: "AX — \(modelManager.choice.name)",
-                        onMinimize: { minimized = true }
-                    ) {
-                        VStack(spacing: 0) {
-                            menuBar
-                            ZStack(alignment: .top) {
-                                Group {
-                                    switch modelManager.state {
-                                    case .ready:
-                                        ChatView(modelManager: modelManager, conversation: conversation, session: $session)
-                                    default:
-                                        ModelDownloadView(modelManager: modelManager)
-                                    }
-                                }
-                                // Tap-away closes an open menu before anything else happens.
-                                if openMenu != nil {
-                                    Color.black.opacity(0.001)
-                                        .onTapGesture { openMenu = nil }
-                                }
-                            }
-                        }
-                    }
-                    .padding(6)
+                desktopIcons
+                if let active {
+                    windowBody(for: active)
+                        .padding(4)
                 }
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: Dest.self) { dest in
-                switch dest {
-                case .library: ModelLibraryView(modelManager: modelManager)
-                case .monitor: MetricsView()
-                case .settings: SettingsView(modelManager: modelManager)
-                #if DEBUG
-                case .eval: EvalView(modelManager: modelManager)
-                #endif
-                }
-            }
+            taskbar
         }
+        .background(W95.desktop)
         .tint(W95.navy)
         .preferredColorScheme(.light)
         .task {
@@ -75,78 +63,139 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, appState.pendingListen else { return }
             appState.pendingListen = false
+            open(.chat)
             startListening()
         }
     }
 
-    // MARK: - Desktop (minimized state)
+    // MARK: - Window management
 
-    /// The whole phone becomes the machine: minimizing AX lands on a desktop with
-    /// icons, a Start menu, and a taskbar showing the one running app.
-    private var desktop: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 22) {
-                W95DesktopIcon(glyph: "🖥️", label: "AX") { minimized = false }
-                W95DesktopIcon(glyph: "💾", label: "Models") { open(.library) }
-                W95DesktopIcon(glyph: "📈", label: "Monitor") { open(.monitor) }
-                W95DesktopIcon(glyph: "⚙️", label: "Settings") { open(.settings) }
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    private func open(_ window: AppWindow) {
+        if !openWindows.contains(window) { openWindows.append(window) }
+        active = window
+    }
 
-            // Taskbar
-            HStack(spacing: 6) {
-                Menu {
-                    Button("AX") { minimized = false }
-                    Button("Model Library") { open(.library) }
-                    Button("System Monitor") { open(.monitor) }
-                    Button("Settings") { open(.settings) }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text("▞").font(.system(size: 12, weight: .black)).foregroundStyle(W95.navy)
-                        Text("Start").font(W95.ui(13, bold: true)).foregroundStyle(W95.text)
+    private func minimize(_ window: AppWindow) {
+        if active == window { active = nil }
+    }
+
+    private func close(_ window: AppWindow) {
+        openWindows.removeAll { $0 == window }
+        if active == window { active = openWindows.last }
+    }
+
+    // MARK: - Windows
+
+    @ViewBuilder
+    private func windowBody(for window: AppWindow) -> some View {
+        switch window {
+        case .chat:
+            W95Window(
+                title: "AX — \(modelManager.choice.name)",
+                onClose: { close(.chat) },
+                onMinimize: { minimize(.chat) }
+            ) {
+                VStack(spacing: 0) {
+                    menuBar
+                    ZStack(alignment: .top) {
+                        Group {
+                            switch modelManager.state {
+                            case .ready:
+                                ChatView(modelManager: modelManager, conversation: conversation, session: $session)
+                            default:
+                                ModelDownloadView(
+                                    modelManager: modelManager,
+                                    onOpenLibrary: { open(.library) }
+                                )
+                            }
+                        }
+                        if openMenu != nil {
+                            Color.black.opacity(0.001)
+                                .onTapGesture { openMenu = nil }
+                        }
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(W95.face)
-                    .overlay(W95BevelOverlay())
-                }
-                Button {
-                    minimized = false
-                } label: {
-                    Text("AX — \(modelManager.choice.name)")
-                        .font(W95.ui(12))
-                        .foregroundStyle(W95.text)
-                        .lineLimit(1)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(W95.face)
-                        .overlay(W95BevelOverlay(sunken: true))
-                }
-                .buttonStyle(.plain)
-                Spacer()
-                TimelineView(.periodic(from: .now, by: 30)) { context in
-                    Text(context.date, format: .dateTime.hour().minute())
-                        .font(W95.ui(12))
-                        .foregroundStyle(W95.text)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .overlay(W95BevelOverlay(sunken: true))
                 }
             }
-            .padding(4)
-            .frame(maxWidth: .infinity)
-            .background(W95.face)
-            .overlay(Rectangle().fill(W95.white).frame(height: 1), alignment: .top)
+        case .library:
+            ModelLibraryView(
+                modelManager: modelManager,
+                onClose: { close(.library) },
+                onMinimize: { minimize(.library) }
+            )
+        case .monitor:
+            MetricsView(
+                onClose: { close(.monitor) },
+                onMinimize: { minimize(.monitor) }
+            )
+        case .settings:
+            SettingsView(
+                modelManager: modelManager,
+                onClose: { close(.settings) },
+                onMinimize: { minimize(.settings) }
+            )
         }
     }
 
-    private func open(_ dest: Dest) {
-        minimized = false
-        path.append(dest)
+    // MARK: - Desktop
+
+    private var desktopIcons: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            ForEach(AppWindow.allCases) { window in
+                W95DesktopIcon(glyph: window.glyph, label: window.title) { open(window) }
+            }
+        }
+        .padding(20)
     }
 
-    // MARK: - Menu bar
+    // MARK: - Taskbar
+
+    private var taskbar: some View {
+        HStack(spacing: 5) {
+            Menu {
+                ForEach(AppWindow.allCases) { window in
+                    Button(window.title) { open(window) }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("▞").font(.system(size: 12, weight: .black)).foregroundStyle(W95.navy)
+                    Text("Start").font(W95.ui(13, bold: true)).foregroundStyle(W95.text)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(W95.face)
+                .overlay(W95BevelOverlay())
+            }
+            ForEach(openWindows) { window in
+                Button {
+                    active == window ? minimize(window) : open(window)
+                } label: {
+                    Text(window.title)
+                        .font(W95.ui(11, bold: active == window))
+                        .foregroundStyle(W95.text)
+                        .lineLimit(1)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(active == window ? W95.faceLight : W95.face)
+                        .overlay(W95BevelOverlay(sunken: active == window))
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer(minLength: 0)
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                Text(context.date, format: .dateTime.hour().minute())
+                    .font(W95.ui(11))
+                    .foregroundStyle(W95.text)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 5)
+                    .overlay(W95BevelOverlay(sunken: true))
+            }
+        }
+        .padding(4)
+        .background(W95.face)
+        .overlay(Rectangle().fill(W95.white).frame(height: 1), alignment: .top)
+    }
+
+    // MARK: - Menu bar (chat window)
 
     private var menuBar: some View {
         HStack(spacing: 0) {
@@ -154,7 +203,7 @@ struct RootView: View {
                 menuItem("New Chat") { conversation.clear() }
             }
             menu("Models") {
-                menuItem("Model Library…") { push(.library) }
+                menuItem("Model Library…") { open(.library) }
                 menuSeparator
                 if installedModels.isEmpty {
                     menuItem("(none installed)") {}
@@ -167,12 +216,9 @@ struct RootView: View {
                 }
             }
             menu("Tools") {
-                menuItem("System Monitor") { push(.monitor) }
-                #if DEBUG
-                menuItem("Tool-call Eval") { push(.eval) }
-                #endif
+                menuItem("System Monitor") { open(.monitor) }
                 menuSeparator
-                menuItem("Settings…") { push(.settings) }
+                menuItem("Settings…") { open(.settings) }
             }
             Spacer()
         }
@@ -182,7 +228,6 @@ struct RootView: View {
         .zIndex(10)
     }
 
-    /// A menu-bar title that drops its items below itself when open.
     private func menu(_ title: String, @ViewBuilder items: @escaping () -> some View) -> some View {
         Button {
             openMenu = openMenu == title ? nil : title
@@ -236,10 +281,6 @@ struct RootView: View {
 
     private var installedModels: [CatalogModel] {
         ModelCatalog.all.filter(modelManager.isDownloaded)
-    }
-
-    private func push(_ dest: Dest) {
-        path.append(dest)
     }
 
     private func startListening() {

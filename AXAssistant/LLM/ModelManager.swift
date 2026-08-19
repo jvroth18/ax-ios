@@ -54,6 +54,8 @@ final class ModelManager {
 
     /// Library downloads that don't switch the active model: id → fraction.
     private(set) var downloadProgress: [String: Double] = [:]
+    /// Why a library download failed, id → message. Never fail silently.
+    private(set) var downloadErrors: [String: String] = [:]
     private var downloadTasks: [String: Task<Void, Never>] = [:]
 
     /// Fetch a model's weights without unloading or switching the current model,
@@ -61,6 +63,7 @@ final class ModelManager {
     func download(_ model: CatalogModel) {
         guard downloadTasks[model.id] == nil, !isDownloaded(model) else { return }
         guard let repoID = Repo.ID(rawValue: model.id) else { return }
+        downloadErrors[model.id] = nil
         downloadProgress[model.id] = 0
         UIApplication.shared.isIdleTimerDisabled = true
         let task = Task {
@@ -80,8 +83,10 @@ final class ModelManager {
                         ModelManager.shared.downloadProgress[model.id] = progress.fractionCompleted
                     }
                 )
+            } catch is CancellationError {
+                // User cancelled; no message needed.
             } catch {
-                // Row falls back to Get; resume skips completed blobs.
+                downloadErrors[model.id] = error.localizedDescription
             }
         }
         downloadTasks[model.id] = task

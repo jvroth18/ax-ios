@@ -4,6 +4,8 @@ import SwiftUI
 /// style download flow with the block progress bar.
 struct ModelDownloadView: View {
     let modelManager: ModelManager
+    /// Opens the Model Library window (windowed shell; no navigation pushes).
+    var onOpenLibrary: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 14) {
@@ -24,14 +26,13 @@ struct ModelDownloadView: View {
                     Text("Or pick a different model in the")
                         .font(W95.ui(12))
                         .foregroundStyle(W95.shadow)
-                    NavigationLink {
-                        ModelLibraryView(modelManager: modelManager)
-                    } label: {
+                    Button(action: onOpenLibrary) {
                         Text("Model Library")
                             .font(W95.ui(12))
                             .foregroundStyle(W95.link)
                             .underline()
                     }
+                    .buttonStyle(.plain)
                 }
 
             case .downloading(let progress):

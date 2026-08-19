@@ -2,16 +2,16 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
-    @Environment(\.dismiss) private var dismiss
     let modelManager: ModelManager
+    let onClose: () -> Void
+    let onMinimize: () -> Void
     @State private var newShortcutName = ""
 
     var body: some View {
         @Bindable var settings = appState.settings
 
-        ZStack {
-            W95Desktop()
-            W95Window(title: "Settings", onClose: { dismiss() }) {
+        W95Window(title: "Settings", onClose: onClose, onMinimize: onMinimize) {
+            NavigationStack {
                 VStack(spacing: 4) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 14) {
@@ -111,10 +111,9 @@ struct SettingsView: View {
                 }
                 .padding(4)
                 .background(W95.face)
+                .toolbar(.hidden, for: .navigationBar)
             }
-            .padding(6)
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 
     /// Blue underlined hyperlink — the 90s-web way to go somewhere.

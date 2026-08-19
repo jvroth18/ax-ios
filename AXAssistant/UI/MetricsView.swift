@@ -4,8 +4,9 @@ import UIKit
 /// "System Monitor": needle gauges for the model's speed, Task-Manager-style history
 /// charts for throughput and memory, and the M1 report exporter.
 struct MetricsView: View {
+    let onClose: () -> Void
+    let onMinimize: () -> Void
     private let store = MetricsStore.shared
-    @Environment(\.dismiss) private var dismiss
     @State private var copiedReport = false
 
     // Sampling runs app-wide in MetricsStore; this screen just renders it.
@@ -15,9 +16,7 @@ struct MetricsView: View {
     private let footprintBudget = 2_500.0 * 1_048_576
 
     var body: some View {
-        ZStack {
-            W95Desktop()
-            W95Window(title: "System Monitor", onClose: { dismiss() }) {
+        W95Window(title: "System Monitor", onClose: onClose, onMinimize: onMinimize) {
                 VStack(spacing: 4) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 10) {
@@ -69,10 +68,7 @@ struct MetricsView: View {
                 }
                 .padding(4)
                 .background(W95.face)
-            }
-            .padding(6)
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var gaugesRow: some View {
