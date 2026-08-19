@@ -202,9 +202,15 @@ struct RootView: View {
             menu("File") {
                 menuItem("New Chat") { conversation.clear() }
             }
+            menu("Mode") {
+                menuItem(appState.settings.toolsMode ? "   Chat" : "✓ Chat") {
+                    appState.settings.toolsMode = false
+                }
+                menuItem(appState.settings.toolsMode ? "✓ Tools" : "   Tools") {
+                    appState.settings.toolsMode = true
+                }
+            }
             menu("Models") {
-                menuItem("Model Library…") { open(.library) }
-                menuSeparator
                 if installedModels.isEmpty {
                     menuItem("(none installed)") {}
                 } else {
@@ -214,11 +220,8 @@ struct RootView: View {
                         }
                     }
                 }
-            }
-            menu("Tools") {
-                menuItem("System Monitor") { open(.monitor) }
                 menuSeparator
-                menuItem("Settings…") { open(.settings) }
+                menuItem("Model Library…") { open(.library) }
             }
             Spacer()
         }

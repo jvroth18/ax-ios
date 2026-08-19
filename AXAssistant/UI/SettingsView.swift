@@ -14,7 +14,7 @@ struct SettingsView: View {
             NavigationStack {
                 VStack(spacing: 4) {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 16) {
                             W95GroupBox(label: "Agent") {
                 HStack(spacing: 10) {
                     Text("Tool chain limit: \(settings.maxToolIterations)")

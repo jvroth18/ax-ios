@@ -165,16 +165,23 @@ struct W95DesktopIcon: View {
 /// Gray beveled push button; the bevel inverts while pressed, like the real thing.
 struct W95ButtonStyle: ButtonStyle {
     var bold = false
+    @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(W95.ui(13, bold: bold))
-            .foregroundStyle(W95.text)
+            // Disabled keys get the authentic embossed-gray label so a dead
+            // button visibly reads as dead instead of silently ignoring taps.
+            .foregroundStyle(isEnabled ? W95.text : W95.shadow)
+            .shadow(color: isEnabled ? .clear : W95.white, radius: 0, x: 1, y: 1)
             .padding(.horizontal, 14)
             .padding(.vertical, 5)
             .background(W95.face)
-            .overlay(W95BevelOverlay(sunken: configuration.isPressed))
-            .offset(x: configuration.isPressed ? 1 : 0, y: configuration.isPressed ? 1 : 0)
+            .overlay(W95BevelOverlay(sunken: configuration.isPressed && isEnabled))
+            .offset(
+                x: configuration.isPressed && isEnabled ? 1 : 0,
+                y: configuration.isPressed && isEnabled ? 1 : 0
+            )
     }
 }
 
@@ -184,12 +191,15 @@ struct W95GroupBox<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // Symmetric inset (was top-heavy 16/10 with a stray outer top pad that
+        // leaked into parent spacing — the app's single biggest crowding source).
+        VStack(alignment: .leading, spacing: 10) {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
-        .padding(.top, 6)
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
         .overlay(
             RoundedRectangle(cornerRadius: 2)
                 .strokeBorder(W95.shadow, lineWidth: 1)
@@ -201,9 +211,8 @@ struct W95GroupBox<Content: View>: View {
                 .foregroundStyle(W95.text)
                 .padding(.horizontal, 4)
                 .background(W95.face)
-                .offset(x: 8, y: -8)
+                .offset(x: 8, y: -7)
         }
-        .padding(.top, 8)
     }
 }
 

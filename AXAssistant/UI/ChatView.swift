@@ -52,77 +52,42 @@ struct ChatView: View {
                 }
             }
 
+            // Recording replaces the input row (stable height, one Stop control)
+            // rather than stacking above and shoving it under the user's thumb.
             if case .listening = appState.mode {
                 RecordingOverlay(session: session)
-            }
-
-            // Mode switch: the active mode reads as the pressed-in key.
-            HStack(spacing: 6) {
-                Text("Mode:")
-                    .font(W95.ui(11))
-                    .foregroundStyle(W95.shadow)
-                modeKey("Chat", active: !appState.settings.toolsMode) {
-                    appState.settings.toolsMode = false
-                }
-                modeKey("Tools", active: appState.settings.toolsMode) {
-                    appState.settings.toolsMode = true
-                }
-                Spacer()
-                // Installed-model picker: switch the brain without leaving the chat.
-                Menu {
-                    ForEach(ModelCatalog.all.filter(modelManager.isDownloaded)) { model in
-                        Button {
-                            Task { await modelManager.switchTo(model) }
-                        } label: {
-                            if model == modelManager.choice {
-                                Label(model.name, systemImage: "checkmark")
-                            } else {
-                                Text(model.name)
+            } else {
+                HStack(spacing: 6) {
+                    TextField("Type a message…", text: $typedInput, axis: .vertical)
+                        .font(W95.ui(13))
+                        .lineLimit(1...5)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 5)
+                        .w95Well(background: .white)
+                        .focused($inputFocused)
+                        .onSubmit(submitTyped)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") { inputFocused = false }
+                                    .font(W95.ui(13, bold: true))
                             }
                         }
+                    // One context-sensitive key: Send when there's text, mic when empty.
+                    if hasDraft {
+                        Button("Send") { submitTyped() }
+                            .buttonStyle(W95ButtonStyle(bold: true))
+                            .disabled(appState.mode != .idle)
+                    } else {
+                        Button("🎙 Talk") { startVoice() }
+                            .buttonStyle(W95ButtonStyle())
+                            .disabled(appState.mode != .idle)
                     }
-                } label: {
-                    Text("▾ \(modelManager.choice.name)")
-                        .font(W95.ui(11))
-                        .foregroundStyle(W95.text)
-                        .lineLimit(1)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(W95.face)
-                        .overlay(W95BevelOverlay())
                 }
-                .disabled(appState.mode != .idle)
-            }
-            .padding(.horizontal, 2)
-
-            HStack(spacing: 4) {
-                Button("New") { conversation.clear() }
-                    .buttonStyle(W95ButtonStyle())
-                    .disabled(conversation.messages.isEmpty || appState.mode != .idle)
-                TextField("Type a message…", text: $typedInput, axis: .vertical)
-                    .font(W95.ui(13))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 5)
-                    .w95Well(background: .white)
-                    .focused($inputFocused)
-                    .onSubmit(submitTyped)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") { inputFocused = false }
-                                .font(W95.ui(13, bold: true))
-                        }
-                    }
-                Button("Send") { submitTyped() }
-                    .buttonStyle(W95ButtonStyle(bold: true))
-                    .disabled(appState.mode != .idle
-                        || typedInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Button("🎙") { startVoice() }
-                    .buttonStyle(W95ButtonStyle())
-                    .disabled(appState.mode != .idle)
             }
 
-            W95StatusBar(fields: [statusText, modelManager.choice.params])
+            // Mode lives in the status bar, INS/CAPS-style — not a whole toolbar row.
+            W95StatusBar(fields: [statusText, appState.settings.toolsMode ? "Tools: On" : "Tools: Off"])
         }
         .padding(4)
         .background(W95.face)
@@ -165,18 +130,8 @@ struct ChatView: View {
         )
     }
 
-    private func modeKey(_ title: String, active: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(W95.ui(12, bold: active))
-                .foregroundStyle(W95.text)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 3)
-                .background(active ? W95.faceLight : W95.face)
-                .overlay(W95BevelOverlay(sunken: active))
-        }
-        .buttonStyle(.plain)
-        .disabled(appState.mode != .idle)
+    private var hasDraft: Bool {
+        !typedInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func startVoice() {
