@@ -138,6 +138,7 @@ final class MetricsStore {
     func recordModelLoad(id: String, duration: TimeInterval) {
         loadedModelID = id
         modelLoadDuration = duration
+        mlxActive = true  // MLX GPU context now exists; snapshots may read it.
     }
 
     var averageTokensPerSecond: Double {
@@ -150,11 +151,16 @@ final class MetricsStore {
         return generations.map(\.timeToFirstToken).reduce(0, +) / Double(generations.count)
     }
 
+    /// True once MLX has a live GPU context (a model loaded). Reading MLX.GPU.*
+    /// before then aborts on a Metal-less host (the iOS Simulator), so gate it.
+    var mlxActive = false
+
     func systemSnapshot() -> SystemSnapshot {
         let footprint = Self.processFootprintBytes()
         peakFootprintBytes = max(peakFootprintBytes, footprint)
         footprintTrace.append(Double(footprint) / 1_048_576)
-        gpuActiveTrace.append(Double(MLX.GPU.activeMemory) / 1_048_576)
+        let gpuActive = mlxActive ? MLX.GPU.activeMemory : 0
+        gpuActiveTrace.append(Double(gpuActive) / 1_048_576)
         if footprintTrace.count > maxTraceSamples {
             footprintTrace.removeFirst(footprintTrace.count - maxTraceSamples)
             gpuActiveTrace.removeFirst(gpuActiveTrace.count - maxTraceSamples)
@@ -162,10 +168,10 @@ final class MetricsStore {
         return SystemSnapshot(
             footprintBytes: footprint,
             availableBytes: Int(os_proc_available_memory()),
-            gpuActiveBytes: MLX.GPU.activeMemory,
-            gpuCacheBytes: MLX.GPU.cacheMemory,
-            gpuPeakBytes: MLX.GPU.peakMemory,
-            gpuCacheLimitBytes: MLX.GPU.cacheLimit,
+            gpuActiveBytes: gpuActive,
+            gpuCacheBytes: mlxActive ? MLX.GPU.cacheMemory : 0,
+            gpuPeakBytes: mlxActive ? MLX.GPU.peakMemory : 0,
+            gpuCacheLimitBytes: mlxActive ? MLX.GPU.cacheLimit : 0,
             thermalState: ProcessInfo.processInfo.thermalState,
             batteryLevel: UIDevice.current.batteryLevel,
             lowPowerMode: ProcessInfo.processInfo.isLowPowerModeEnabled
@@ -176,7 +182,7 @@ final class MetricsStore {
     var m1Report: String {
         let model = loadedModelID ?? "unknown"
         let peakMB = Double(max(peakFootprintBytes, Self.processFootprintBytes())) / 1_048_576
-        let gpuPeakMB = Double(MLX.GPU.peakMemory) / 1_048_576
+        let gpuPeakMB = Double(mlxActive ? MLX.GPU.peakMemory : 0) / 1_048_576
         let load = modelLoadDuration.map { String(format: "%.1fs", $0) } ?? "n/a"
         return """
         ## M1 measurements — \(Date().formatted(date: .abbreviated, time: .shortened))
