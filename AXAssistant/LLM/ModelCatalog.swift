@@ -137,10 +137,10 @@ enum ModelCatalog {
             minMemoryGB: 8
         ),
         CatalogModel(
-            id: "jtown18/DiStil-Qwen3-1.7B-uncensored-4bit",
-            name: "DiStil 1.7B Uncensored", vendor: "Community (reaperdoesntknow)", params: "1.7B", downloadGB: 1.1,
+            id: "mlx-community/Josiefied-Qwen3-4B-abliterated-v1-4bit",
+            name: "Qwen3 4B Abliterated (uncensored)", vendor: "Community (Josiefied)", params: "4B", downloadGB: 2.26,
             category: .specialist,
-            blurb: "Community uncensored finetune, no safety tuning. Scored 3/9 on tool calling — the finetune damaged instruction-following. Lab specimen, not a daily driver.",
+            blurb: "Refusals surgically removed (abliteration), capability intact: 9/9 on the tool-calling eval. Replaces the earlier DiStil \"uncensored\" model, whose finetune broke instruction-following. No safety tuning — you get what you ask for.",
             minMemoryGB: 8
         ),
     ]

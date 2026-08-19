@@ -40,6 +40,24 @@ final class ModelManager {
 
     private init() {
         Self.migrateFromCachesIfNeeded()
+        Self.removeOrphanedModels()
+    }
+
+    /// Weights for models no longer in the catalog are invisible to the Library and
+    /// would squat on storage forever; delete them. (Every download comes from the
+    /// catalog, so anything unmatched is a removed entry.)
+    private static func removeOrphanedModels() {
+        // The voice stack (Kokoro + its G2P assets) shares this store but isn't a
+        // catalog entry — never treat it as an orphan.
+        var known = Set(ModelCatalog.all.map {
+            "models--" + $0.id.replacingOccurrences(of: "/", with: "--")
+        })
+        known.insert("models--" + KokoroSpeaker.modelRepo.replacingOccurrences(of: "/", with: "--"))
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: hubRoot.path) else { return }
+        for entry in entries
+        where entry.hasPrefix("models--") && !known.contains(entry) && !entry.contains("beshkenadze") {
+            try? FileManager.default.removeItem(at: hubRoot.appendingPathComponent(entry))
+        }
     }
 
     /// Earlier builds let HubClient default to Caches; move anything there into
