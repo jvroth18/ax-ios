@@ -2,74 +2,103 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
     let modelManager: ModelManager
     @State private var newShortcutName = ""
 
     var body: some View {
         @Bindable var settings = appState.settings
 
-        Form {
-            Section("Model") {
-                Picker("Model", selection: Binding(
-                    get: { modelManager.choice },
-                    set: { modelManager.choice = $0 }
-                )) {
-                    ForEach(ModelManager.ModelChoice.allCases) { choice in
-                        Text("\(choice.displayName) · \(choice.approximateSize)").tag(choice)
+        ZStack {
+            W95Desktop()
+            W95Window(title: "Settings", onClose: { dismiss() }) {
+                VStack(spacing: 4) {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 14) {
+                            W95GroupBox(label: "Voice") {
+                                Toggle("Speak replies aloud", isOn: $settings.speakReplies)
+                                    .toggleStyle(W95CheckboxStyle())
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("End recording after \(settings.silenceTimeout, specifier: "%.1f")s of silence")
+                                        .font(W95.ui(12))
+                                    Slider(value: $settings.silenceTimeout, in: 0.8...3.0, step: 0.1)
+                                        .tint(W95.navy)
+                                }
+                            }
+
+                            W95GroupBox(label: "Shortcuts AX may run") {
+                                if settings.registeredShortcuts.isEmpty {
+                                    Text("(none registered)")
+                                        .font(W95.ui(12))
+                                        .foregroundStyle(W95.shadow)
+                                } else {
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        ForEach(settings.registeredShortcuts, id: \.self) { name in
+                                            HStack {
+                                                Text(name).font(W95.ui(12))
+                                                Spacer()
+                                                Button("✕") {
+                                                    settings.registeredShortcuts.removeAll { $0 == name }
+                                                }
+                                                .buttonStyle(W95ButtonStyle())
+                                            }
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 3)
+                                        }
+                                    }
+                                    .w95Well(background: .white)
+                                }
+                                HStack(spacing: 4) {
+                                    TextField("Exact shortcut name", text: $newShortcutName)
+                                        .font(W95.ui(12))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 4)
+                                        .w95Well(background: .white)
+                                    Button("Add") {
+                                        let trimmed = newShortcutName.trimmingCharacters(in: .whitespaces)
+                                        guard !trimmed.isEmpty, !settings.registeredShortcuts.contains(trimmed) else { return }
+                                        settings.registeredShortcuts.append(trimmed)
+                                        newShortcutName = ""
+                                    }
+                                    .buttonStyle(W95ButtonStyle())
+                                }
+                                Text("AX can only run Shortcuts listed here, and always asks first. Names must match the Shortcuts app exactly.")
+                                    .font(W95.ui(11))
+                                    .foregroundStyle(W95.shadow)
+                            }
+
+                            W95GroupBox(label: "More") {
+                                link("Connectors") { ConnectorsView() }
+                                link("Interaction history") { HistoryView() }
+                                #if DEBUG
+                                link("Tool-call eval") { EvalView(modelManager: modelManager) }
+                                #if AX_DRIVER
+                                link("Driver (experimental)") { DriverView(modelManager: modelManager) }
+                                #endif
+                                #endif
+                            }
+                        }
+                        .padding(8)
                     }
+                    .w95Well(background: W95.face)
+                    W95StatusBar(fields: ["AX — on-device model runner"])
                 }
-                Button("Delete downloaded model", role: .destructive) {
-                    modelManager.deleteDownloadedModel()
-                }
+                .padding(4)
+                .background(W95.face)
             }
-
-            Section("Voice") {
-                Toggle("Speak replies aloud", isOn: $settings.speakReplies)
-                VStack(alignment: .leading) {
-                    Text("End recording after \(settings.silenceTimeout, specifier: "%.1f")s of silence")
-                    Slider(value: $settings.silenceTimeout, in: 0.8...3.0, step: 0.1)
-                }
-            }
-
-            Section {
-                ForEach(settings.registeredShortcuts, id: \.self) { name in
-                    Text(name)
-                }
-                .onDelete { settings.registeredShortcuts.remove(atOffsets: $0) }
-                HStack {
-                    TextField("Exact shortcut name", text: $newShortcutName)
-                    Button("Add") {
-                        let trimmed = newShortcutName.trimmingCharacters(in: .whitespaces)
-                        guard !trimmed.isEmpty, !settings.registeredShortcuts.contains(trimmed) else { return }
-                        settings.registeredShortcuts.append(trimmed)
-                        newShortcutName = ""
-                    }
-                }
-            } header: {
-                Text("Shortcuts AX may run")
-            } footer: {
-                Text("AX can only run Shortcuts you list here, and always asks before running one. Names must match the Shortcuts app exactly.")
-            }
-
-            Section {
-                NavigationLink("Connectors") { ConnectorsView() }
-            } footer: {
-                Text("Endpoints and app-summary tasks AX can use by voice.")
-            }
-
-            Section("History") {
-                NavigationLink("Interaction history") { HistoryView() }
-            }
-
-            #if DEBUG
-            Section("Developer") {
-                NavigationLink("Tool-call eval") { EvalView(modelManager: modelManager) }
-                #if AX_DRIVER
-                NavigationLink("Driver (experimental)") { DriverView(modelManager: modelManager) }
-                #endif
-            }
-            #endif
+            .padding(6)
         }
-        .navigationTitle("Settings")
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// Blue underlined hyperlink — the 90s-web way to go somewhere.
+    private func link(_ title: String, destination: @escaping () -> some View) -> some View {
+        NavigationLink { destination() } label: {
+            Text(title)
+                .font(W95.ui(13))
+                .foregroundStyle(W95.link)
+                .underline()
+        }
+        .buttonStyle(.plain)
     }
 }

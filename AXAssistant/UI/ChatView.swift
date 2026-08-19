@@ -1,6 +1,8 @@
 import SwiftUI
 import AXCore
 
+/// The conversation, as a 90s chat log: "You:" / "AX:" lines in a sunken white well,
+/// a Send button that's always visible, and a status bar reporting what the app is doing.
 struct ChatView: View {
     @Environment(AppState.self) private var appState
     let modelManager: ModelManager
@@ -9,36 +11,35 @@ struct ChatView: View {
     @State private var typedInput = ""
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 4) {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 8) {
                         if conversation.messages.isEmpty && conversation.thinkingPartial == nil {
-                            ContentUnavailableView(
-                                "Press your Action Button",
-                                systemImage: "waveform.circle",
-                                description: Text("Or type below. Assign the Action Button in Settings > Action Button > Shortcut > Ask AX.")
-                            )
-                            .padding(.top, 60)
+                            emptyState
                         }
                         ForEach(conversation.messages) { message in
-                            MessageBubble(message: message)
+                            ChatLine(message: message)
                         }
                         if let partial = conversation.thinkingPartial {
-                            Text(partial.isEmpty ? "…" : partial)
-                                .foregroundStyle(.secondary)
-                                .padding(10)
-                                .id("thinking")
+                            HStack(alignment: .top, spacing: 6) {
+                                W95Hourglass()
+                                Text(partial.isEmpty ? "AX is thinking…" : partial)
+                                    .font(W95.ui(13))
+                                    .foregroundStyle(W95.shadow)
+                            }
+                            .id("thinking")
                         }
                         if case .failed(let why) = session?.phase {
-                            Label(why, systemImage: "exclamationmark.triangle")
+                            Text("! \(why)")
+                                .font(W95.ui(12, bold: true))
                                 .foregroundStyle(.red)
-                                .font(.callout)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                    .padding(8)
                 }
+                .w95Well(background: .white)
                 .onChange(of: conversation.messages) { _, messages in
                     if let last = messages.last {
                         withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
@@ -50,27 +51,53 @@ struct ChatView: View {
                 RecordingOverlay(session: session)
             }
 
-            HStack {
-                TextField("Type a request…", text: $typedInput, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+            HStack(spacing: 4) {
+                TextField("Type a message…", text: $typedInput, axis: .vertical)
+                    .font(W95.ui(13))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 5)
+                    .w95Well(background: .white)
                     .onSubmit(submitTyped)
-                Button(action: startVoice) {
-                    Image(systemName: "mic.circle.fill").font(.title)
-                }
-                .disabled(appState.mode != .idle)
+                Button("Send") { submitTyped() }
+                    .buttonStyle(W95ButtonStyle(bold: true))
+                    .disabled(appState.mode != .idle
+                        || typedInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button("🎙") { startVoice() }
+                    .buttonStyle(W95ButtonStyle())
+                    .disabled(appState.mode != .idle)
             }
-            .padding()
+
+            W95StatusBar(fields: [statusText, modelManager.choice.params])
         }
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Clear", systemImage: "square.and.pencil") { conversation.clear() }
-                    .disabled(conversation.messages.isEmpty)
-            }
-        }
+        .padding(4)
+        .background(W95.face)
         .sheet(isPresented: confirmationPresented) {
             if let pending = conversation.pendingConfirmation {
                 ConfirmSheet(call: pending.call, spec: pending.spec, resume: pending.resume)
             }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Welcome to AX!")
+                .font(W95.ui(15, bold: true))
+                .foregroundStyle(W95.navy)
+            Text("Press your Action Button to talk, or type below.")
+                .font(W95.ui(13))
+            Text("Tip: assign the Action Button under Settings → Action Button → Shortcut → Ask AX.")
+                .font(W95.ui(12))
+                .foregroundStyle(W95.shadow)
+        }
+        .padding(.top, 8)
+    }
+
+    private var statusText: String {
+        switch appState.mode {
+        case .idle: return conversation.messages.isEmpty ? "Ready" : "Done"
+        case .listening: return "Listening…"
+        case .thinking: return "Working…"
+        case .awaitingConfirmation: return "Waiting for you…"
         }
     }
 
@@ -97,25 +124,21 @@ struct ChatView: View {
     }
 }
 
-private struct MessageBubble: View {
+private struct ChatLine: View {
     let message: Conversation.DisplayMessage
 
     var body: some View {
         switch message.role {
         case .user:
-            Text(message.text)
-                .padding(10)
-                .background(.blue.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            (Text("You: ").font(W95.ui(13, bold: true)).foregroundStyle(W95.navy)
+             + Text(message.text).font(W95.ui(13)).foregroundStyle(W95.text))
         case .assistant:
-            Text(message.text)
-                .padding(10)
-                .background(.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            (Text("AX: ").font(W95.ui(13, bold: true)).foregroundStyle(W95.maroon)
+             + Text(message.text).font(W95.ui(13)).foregroundStyle(W95.text))
         case .tool:
-            Label(message.text, systemImage: "wrench.and.screwdriver")
-                .font(.caption)
-                .foregroundStyle(.orange)
+            Text("* \(message.text)")
+                .font(W95.ui(12).italic())
+                .foregroundStyle(W95.shadow)
         }
     }
 }

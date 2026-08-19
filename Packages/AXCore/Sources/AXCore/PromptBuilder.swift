@@ -26,7 +26,9 @@ public enum PromptBuilder {
 
         if !context.registeredShortcuts.isEmpty {
             lines.append("Shortcuts the user has registered for run_shortcut: " +
-                         context.registeredShortcuts.map { "\"\($0)\"" }.joined(separator: ", "))
+                         context.registeredShortcuts.map { "\"\($0)\"" }.joined(separator: ", ") +
+                         ". Only call run_shortcut when the user explicitly asks to run a shortcut" +
+                         " — for reminders, timers, and other requests use the matching tool instead.")
         }
 
         lines.append("""
@@ -44,8 +46,17 @@ public enum PromptBuilder {
         {"name": <function-name>, "arguments": <args-json-object>}
         </tool_call>
 
+        Example — the user says "Turn off the flashlight" and you reply with exactly:
+        <tool_call>
+        {"name": "toggle_flashlight", "arguments": {"state": "off"}}
+        </tool_call>
+
         Rules:
+        - When a tool fits, ALWAYS reply with a <tool_call> block as in the example — \
+        never with an empty message, and never with the tool name outside the JSON.
         - Use absolute ISO 8601 date-times (resolve "tomorrow at 9" using the current date above).
+        - "Remind me…" requests are create_reminder, never set_timer — timers are only for \
+        counting down a duration ("set a timer for 10 minutes").
         - If the request is ambiguous, ask a short clarifying question instead of guessing.
         - If no tool fits, answer briefly in plain language. Keep spoken-style answers to one or two sentences.
         - Never invent tool names or shortcut names that are not listed.

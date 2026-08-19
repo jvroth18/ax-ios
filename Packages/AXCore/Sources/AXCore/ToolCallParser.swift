@@ -45,10 +45,47 @@ public enum ToolCallParser {
             calls.append(call)
         }
 
+        // Fallback: small models often emit the call JSON bare, without the
+        // <tool_call> tags. If the whole completion is {"name":…,"arguments":…}
+        // shaped (or several such objects on separate lines), honor it.
+        if calls.isEmpty {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.hasPrefix("{") {
+                let candidates = bareCandidates(in: trimmed)
+                if !candidates.isEmpty {
+                    for candidate in candidates {
+                        calls.append(try parseBlock(candidate, tools: tools))
+                    }
+                    text = ""
+                }
+            }
+        }
+
         return ParsedCompletion(
             toolCalls: calls,
             text: text.trimmingCharacters(in: .whitespacesAndNewlines)
         )
+    }
+
+    /// Bare-JSON candidates: the whole string if it decodes as a call-shaped object
+    /// ("name" string present), else each line that does. Non-call JSON (no "name")
+    /// is left alone so JSON-shaped prose answers still read as text.
+    private static func bareCandidates(in trimmed: String) -> [String] {
+        func isCallShaped(_ string: String) -> Bool {
+            guard let data = string.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: JSONValue].self, from: data)
+            else { return false }
+            return decoded["name"]?.stringValue != nil
+        }
+        if isCallShaped(trimmed) { return [trimmed] }
+        let lines = trimmed
+            .split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        if lines.count > 1, lines.allSatisfy({ $0.hasPrefix("{") && isCallShaped($0) }) {
+            return lines
+        }
+        return []
     }
 
     // MARK: - Block extraction

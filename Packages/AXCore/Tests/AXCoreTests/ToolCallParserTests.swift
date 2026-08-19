@@ -52,6 +52,45 @@ final class ToolCallParserTests: XCTestCase {
         XCTAssertEqual(parsed.text, "")
     }
 
+    func testParsesBareJSONCallWithoutTags() throws {
+        let output = """
+        {"name": "toggle_flashlight", "arguments": {"state": "on"}}
+        """
+        let parsed = try ToolCallParser.parse(output, tools: tools)
+        XCTAssertEqual(parsed.toolCalls.count, 1)
+        XCTAssertEqual(parsed.toolCalls[0].name, "toggle_flashlight")
+        XCTAssertEqual(parsed.toolCalls[0].string("state"), "on")
+        XCTAssertEqual(parsed.text, "")
+    }
+
+    func testParsesMultipleBareJSONCallLines() throws {
+        let output = """
+        {"name": "toggle_flashlight", "arguments": {"state": "on"}}
+        {"name": "set_timer", "arguments": {"minutes": 10}}
+        """
+        let parsed = try ToolCallParser.parse(output, tools: tools)
+        XCTAssertEqual(parsed.toolCalls.map(\.name), ["toggle_flashlight", "set_timer"])
+    }
+
+    func testBareJSONWithoutNameIsText() throws {
+        let output = #"{"answer": "It is 72 degrees outside."}"#
+        let parsed = try ToolCallParser.parse(output, tools: tools)
+        XCTAssertTrue(parsed.toolCalls.isEmpty)
+        XCTAssertEqual(parsed.text, output)
+    }
+
+    func testBareJSONUnknownToolThrows() {
+        let output = #"{"name": "warp_drive", "arguments": {}}"#
+        XCTAssertThrowsError(try ToolCallParser.parse(output, tools: tools)) { error in
+            XCTAssertEqual(error as? ToolCallParseError, .unknownTool(name: "warp_drive"))
+        }
+    }
+
+    func testBareJSONInvalidArgsThrows() {
+        let output = #"{"name": "toggle_flashlight", "arguments": {"state": "sideways"}}"#
+        XCTAssertThrowsError(try ToolCallParser.parse(output, tools: tools))
+    }
+
     func testStripsThinkBlockAndKeepsSurroundingText() throws {
         let output = """
         <think>The user wants a timer. minutes = 10.</think>

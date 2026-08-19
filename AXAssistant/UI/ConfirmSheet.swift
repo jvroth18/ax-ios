@@ -10,26 +10,43 @@ struct ConfirmSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label(spec.description, systemImage: "hand.raised")
-                .font(.headline)
-
-            GroupBox("Details") {
-                ForEach(call.arguments.keys.sorted(), id: \.self) { key in
-                    LabeledContent(key, value: displayValue(call.arguments[key]))
+        ZStack {
+            W95Desktop()
+            // Message-box style: warning icon, question, OK/Cancel.
+            W95Window(title: "Confirm Action") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Text("⚠️").font(.system(size: 28))
+                        Text(spec.description)
+                            .font(W95.ui(13, bold: true))
+                            .foregroundStyle(W95.text)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(call.arguments.keys.sorted(), id: \.self) { key in
+                            HStack(alignment: .top) {
+                                Text(key).font(W95.mono(11)).foregroundStyle(W95.shadow)
+                                Spacer()
+                                Text(displayValue(call.arguments[key]))
+                                    .font(W95.ui(12))
+                                    .foregroundStyle(W95.text)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .w95Well(background: .white)
+                    HStack(spacing: 8) {
+                        Spacer()
+                        Button("OK") { finish(true) }.buttonStyle(W95ButtonStyle(bold: true))
+                        Button("Cancel") { finish(false) }.buttonStyle(W95ButtonStyle())
+                        Spacer()
+                    }
                 }
+                .padding(12)
+                .background(W95.face)
             }
-
-            HStack {
-                Button("Cancel", role: .cancel) { finish(false) }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(.bordered)
-                Button("Do it") { finish(true) }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(.borderedProminent)
-            }
+            .padding(14)
         }
-        .padding()
         .presentationDetents([.medium])
         .interactiveDismissDisabled()
     }
