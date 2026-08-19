@@ -14,6 +14,10 @@ final class SettingsStore {
     var maxToolIterations: Int {
         didSet { UserDefaults.standard.set(maxToolIterations, forKey: "maxToolIterations") }
     }
+    /// Mode 2 (tools) runs the full agent loop; Mode 1 (chat) is plain conversation.
+    var toolsMode: Bool {
+        didSet { UserDefaults.standard.set(toolsMode, forKey: "toolsMode") }
+    }
     /// Speak replies with Kokoro-82M (open, on-device, natural) instead of the system voice.
     var useKokoroVoice: Bool {
         didSet { UserDefaults.standard.set(useKokoroVoice, forKey: "useKokoroVoice") }
@@ -36,6 +40,7 @@ final class SettingsStore {
         speakReplies = defaults.object(forKey: "speakReplies") as? Bool ?? true
         silenceTimeout = defaults.object(forKey: "silenceTimeout") as? Double ?? 1.2
         maxToolIterations = defaults.object(forKey: "maxToolIterations") as? Int ?? 3
+        toolsMode = defaults.object(forKey: "toolsMode") as? Bool ?? true
         useKokoroVoice = defaults.object(forKey: "useKokoroVoice") as? Bool ?? false
         kokoroVoice = defaults.string(forKey: "kokoroVoice") ?? "af_heart"
         registeredShortcuts = defaults.stringArray(forKey: "registeredShortcuts") ?? []

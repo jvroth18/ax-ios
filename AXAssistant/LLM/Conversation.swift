@@ -43,15 +43,25 @@ final class Conversation {
             appState.mode = .idle
         }
 
-        let loop = AgentLoop(
-            container: container,
-            registry: .standard,
-            confirmer: self,
-            config: AgentConfig(maxToolIterations: appState.settings.maxToolIterations)
-        )
         do {
-            let turn = try await loop.run(history: history, userText: text) { partial in
-                Task { @MainActor [weak self] in self?.thinkingPartial = partial }
+            let turn: AgentLoop.Turn
+            if appState.settings.toolsMode {
+                let loop = AgentLoop(
+                    container: container,
+                    registry: .standard,
+                    confirmer: self,
+                    config: AgentConfig(maxToolIterations: appState.settings.maxToolIterations)
+                )
+                turn = try await loop.run(history: history, userText: text) { partial in
+                    Task { @MainActor [weak self] in self?.thinkingPartial = partial }
+                }
+            } else {
+                // Mode 1 — plain chat: no tool schemas in the prompt, no agent loop.
+                turn = try await Self.plainChatTurn(
+                    container: container, history: history, userText: text
+                ) { partial in
+                    Task { @MainActor [weak self] in self?.thinkingPartial = partial }
+                }
             }
             for (call, result) in zip(turn.toolCalls, turn.toolResults) {
                 messages.append(DisplayMessage(role: .tool, text: "\(call.name) → \(result.content)"))
@@ -84,6 +94,29 @@ final class Conversation {
     func clear() {
         messages = []
         history = []
+    }
+
+    /// Mode 1: conversation without the tool machinery — a lean prompt, one
+    /// generation, think-blocks stripped.
+    private static func plainChatTurn(
+        container: ModelContainer,
+        history: [ChatMessage],
+        userText: String,
+        onPartial: @escaping @Sendable (String) -> Void
+    ) async throws -> AgentLoop.Turn {
+        let system = """
+        You are AX, a voice assistant running entirely on the user's iPhone. \
+        Give helpful conversational answers; keep spoken-style replies natural. \
+        Current date and time: \(AgentLoop.formattedNow())
+        """
+        var messages: [ChatMessage] = [.init(role: .system, content: system)]
+        messages.append(contentsOf: history)
+        messages.append(.init(role: .user, content: userText))
+        let completion = try await LLMGenerator.generate(
+            container: container, messages: messages, onPartial: onPartial
+        )
+        let reply = (try? ToolCallParser.parse(completion, tools: []))?.text ?? completion
+        return AgentLoop.Turn(reply: reply, toolCalls: [], toolResults: [])
     }
 }
 

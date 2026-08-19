@@ -56,6 +56,26 @@ struct ChatView: View {
                 RecordingOverlay(session: session)
             }
 
+            // Mode switch: the active mode reads as the pressed-in key.
+            HStack(spacing: 6) {
+                Text("Mode:")
+                    .font(W95.ui(11))
+                    .foregroundStyle(W95.shadow)
+                modeKey("Chat", active: !appState.settings.toolsMode) {
+                    appState.settings.toolsMode = false
+                }
+                modeKey("Tools", active: appState.settings.toolsMode) {
+                    appState.settings.toolsMode = true
+                }
+                Spacer()
+                Text(appState.settings.toolsMode
+                     ? "AX can act: reminders, timers, apps…"
+                     : "Conversation only — no actions")
+                    .font(W95.ui(10))
+                    .foregroundStyle(W95.shadow)
+            }
+            .padding(.horizontal, 2)
+
             HStack(spacing: 4) {
                 Button("New") { conversation.clear() }
                     .buttonStyle(W95ButtonStyle())
@@ -124,6 +144,20 @@ struct ChatView: View {
                 if !presented { conversation.pendingConfirmation?.resume(false) }
             }
         )
+    }
+
+    private func modeKey(_ title: String, active: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(W95.ui(12, bold: active))
+                .foregroundStyle(W95.text)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(active ? W95.faceLight : W95.face)
+                .overlay(W95BevelOverlay(sunken: active))
+        }
+        .buttonStyle(.plain)
+        .disabled(appState.mode != .idle)
     }
 
     private func startVoice() {
