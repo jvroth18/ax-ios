@@ -3,7 +3,7 @@ import SwiftUI
 import AXCore
 
 /// Debug golden-transcript eval against the currently loaded model. For cross-model
-/// comparison, use the Ablation Lab instead.
+/// comparison, use the CLI eval harness on the Mac.
 struct EvalView: View {
     let modelManager: ModelManager
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     enum Dest: Hashable {
-        case library, monitor, settings, ablation
+        case library, monitor, settings
         #if DEBUG
         case eval
         #endif
@@ -49,7 +49,6 @@ struct RootView: View {
                 case .library: ModelLibraryView(modelManager: modelManager)
                 case .monitor: MetricsView()
                 case .settings: SettingsView(modelManager: modelManager)
-                case .ablation: AblationView(modelManager: modelManager)
                 #if DEBUG
                 case .eval: EvalView(modelManager: modelManager)
                 #endif
@@ -94,7 +93,6 @@ struct RootView: View {
             }
             menu("Tools") {
                 menuItem("System Monitor") { push(.monitor) }
-                menuItem("Ablation Lab…") { push(.ablation) }
                 #if DEBUG
                 menuItem("Tool-call Eval") { push(.eval) }
                 #endif

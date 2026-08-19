@@ -3,7 +3,7 @@ import AXCore
 import MLXLMCommon
 
 /// Golden-transcript eval cases and scoring, shared by the debug eval screen and the
-/// Ablation Lab. Generation only — no tool execution.
+/// debug eval screen. Generation only — no tool execution.
 struct EvalCase: Identifiable, Sendable {
     let id = UUID()
     let transcript: String
