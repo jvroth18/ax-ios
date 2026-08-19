@@ -35,7 +35,13 @@ public struct ParsedCompletion: Equatable, Sendable {
 public enum ToolCallParser {
 
     public static func parse(_ completion: String, tools: [ToolSpec]) throws -> ParsedCompletion {
-        let withoutThinking = strip(tag: "think", from: completion)
+        var withoutThinking = strip(tag: "think", from: completion)
+        // Some finetunes emit dangling think tags (a bare "</think>" after real
+        // content, or an unpaired "<think>") that survive matched-pair stripping
+        // and would corrupt an otherwise-valid completion.
+        withoutThinking = withoutThinking
+            .replacingOccurrences(of: "</think>", with: "")
+            .replacingOccurrences(of: "<think>", with: "")
         var text = withoutThinking
         var calls: [ToolCall] = []
 

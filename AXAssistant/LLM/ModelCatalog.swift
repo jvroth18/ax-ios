@@ -69,6 +69,13 @@ enum ModelCatalog {
             blurb: "The most capable here, but the weights alone are 4.6 GB — 12 GB Pro devices only.",
             minMemoryGB: 12
         ),
+        CatalogModel(
+            id: "jtown18/Qwen3.8-4B-Distilled-4bit",
+            name: "Qwen3.8 4B Distilled", vendor: "Community (Ma7ee7)", params: "4B", downloadGB: 2.1,
+            category: .assistant,
+            blurb: "Newest-generation Qwen3.8 distill, converted for AX. Scored 9/9 on the tool-calling eval — the best score of any community model tested.",
+            minMemoryGB: 8
+        ),
 
         // Small & fast — instant answers, quick commands.
         CatalogModel(
@@ -120,6 +127,20 @@ enum ModelCatalog {
             name: "SmolLM3 3B", vendor: "Hugging Face", params: "3B", downloadGB: 1.73,
             category: .specialist,
             blurb: "Hugging Face's fully open model — training data and recipe published. Multilingual.",
+            minMemoryGB: 8
+        ),
+        CatalogModel(
+            id: "jtown18/Qwen3.8-2B-4bit",
+            name: "Qwen3.8 2B", vendor: "Community (empero-ai)", params: "2B", downloadGB: 1.0,
+            category: .specialist,
+            blurb: "Chat only — scored 0/9 on tool calling; it converses but won't run your reminders or timers. For lab comparisons.",
+            minMemoryGB: 8
+        ),
+        CatalogModel(
+            id: "jtown18/DiStil-Qwen3-1.7B-uncensored-4bit",
+            name: "DiStil 1.7B Uncensored", vendor: "Community (reaperdoesntknow)", params: "1.7B", downloadGB: 1.1,
+            category: .specialist,
+            blurb: "Community uncensored finetune, no safety tuning. Scored 3/9 on tool calling — the finetune damaged instruction-following. Lab specimen, not a daily driver.",
             minMemoryGB: 8
         ),
     ]

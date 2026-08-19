@@ -91,6 +91,15 @@ final class ToolCallParserTests: XCTestCase {
         XCTAssertThrowsError(try ToolCallParser.parse(output, tools: tools))
     }
 
+    func testStraysThinkTagsAreStripped() throws {
+        let output = """
+        {"name": "toggle_flashlight", "arguments": {"state": "on"}}</think>
+        """
+        let parsed = try ToolCallParser.parse(output, tools: tools)
+        XCTAssertEqual(parsed.toolCalls.count, 1)
+        XCTAssertEqual(parsed.toolCalls[0].name, "toggle_flashlight")
+    }
+
     func testStripsThinkBlockAndKeepsSurroundingText() throws {
         let output = """
         <think>The user wants a timer. minutes = 10.</think>
