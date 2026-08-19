@@ -9,7 +9,7 @@ enum LLMGenerator {
     static func generate(
         container: ModelContainer,
         messages: [ChatMessage],
-        maxTokens: Int = 1024,
+        maxTokens: Int = 640,
         onPartial: @escaping @Sendable (String) -> Void = { _ in }
     ) async throws -> String {
         try await container.perform { modelContext in
@@ -70,6 +70,10 @@ enum LLMGenerator {
                 )
                 Task { @MainActor in MetricsStore.shared.record(record) }
             }
+            // Release the KV cache and scratch buffers this turn allocated. Without
+            // this they accumulate across turns and push a large model past the
+            // ~3.4 GB iOS per-process limit → jetsam kill mid-conversation.
+            MLX.GPU.clearCache()
             return output
         }
     }

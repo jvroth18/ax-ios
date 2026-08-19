@@ -196,8 +196,10 @@ final class ModelManager {
             // kills the app mid-load (the "crash" on the 4B abliterated model).
             KokoroSpeaker.shared.freeModel()
             MLX.GPU.clearCache()
-            // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
-            MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
+            // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is
+            // real (iOS kills at a ~3.4 GB per-process limit). 256 MB leaves more
+            // headroom for a 2+ GB model's weights + KV cache.
+            MLX.GPU.set(cacheLimit: 256 * 1024 * 1024)
 
             // The macro supplies the Hugging Face downloader + tokenizer loader (3.x API).
             // The handler is a typed local: the expression checker can't infer closure
