@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 import MLX
 import MLXLMCommon
 import MLXLLM
@@ -79,6 +80,9 @@ final class ModelManager {
 
     private func load() async {
         state = .downloading(progress: 0)
+        // Multi-GB downloads die if the screen locks; keep it awake until done.
+        UIApplication.shared.isIdleTimerDisabled = true
+        defer { UIApplication.shared.isIdleTimerDisabled = false }
         let loadStart = Date()
         do {
             // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
@@ -151,10 +155,23 @@ final class ModelManager {
     }
 
     func isDownloaded(_ model: CatalogModel) -> Bool {
-        // A repo dir can exist with an aborted download; require a snapshot.
+        // An interrupted download leaves a snapshot with metadata but missing (or
+        // dangling-symlink) weight shards — seen in the wild on Jordan's phone.
+        // Only count a model as installed when a snapshot has ≥1 .safetensors entry
+        // and every one of them resolves (fileExists follows symlinks).
         let snapshots = repoDirectory(for: model).appendingPathComponent("snapshots")
-        let contents = (try? FileManager.default.contentsOfDirectory(atPath: snapshots.path)) ?? []
-        return !contents.isEmpty
+        guard let snapshotIDs = try? FileManager.default.contentsOfDirectory(atPath: snapshots.path)
+        else { return false }
+        for snapshotID in snapshotIDs {
+            let dir = snapshots.appendingPathComponent(snapshotID)
+            guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { continue }
+            let tensors = files.filter { $0.hasSuffix(".safetensors") }
+            if !tensors.isEmpty,
+               tensors.allSatisfy({ FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path) }) {
+                return true
+            }
+        }
+        return false
     }
 
     /// Actual bytes on disk, so the library can show real sizes next to the estimates.
