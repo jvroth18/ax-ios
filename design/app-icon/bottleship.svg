@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171C3D"/>
+      <stop offset="1" stop-color="#0A0D20"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0.55" stop-color="#070A19" stop-opacity="0"/>
+      <stop offset="1" stop-color="#070A19" stop-opacity="0.55"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.46" r="0.55">
+      <stop offset="0" stop-color="#333A66" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#333A66" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="starGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="0.4" stop-color="#BFEDF7" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#BFEDF7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- full-bleed background -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#vignette)"/>
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#halo)"/>
+
+  <!-- quiet pixel-grain dither at the halo's fade edge (Win-95 nod) -->
+  <g fill="#7A83BF" opacity="0.10">
+    <rect x="238" y="160" width="14" height="14"/>
+    <rect x="266" y="188" width="14" height="14"/>
+    <rect x="210" y="216" width="14" height="14"/>
+    <rect x="760" y="146" width="14" height="14"/>
+    <rect x="788" y="174" width="14" height="14"/>
+    <rect x="732" y="202" width="14" height="14"/>
+    <rect x="146" y="480" width="14" height="14"/>
+    <rect x="174" y="508" width="14" height="14"/>
+    <rect x="146" y="536" width="14" height="14"/>
+    <rect x="852" y="452" width="14" height="14"/>
+    <rect x="880" y="480" width="14" height="14"/>
+    <rect x="852" y="508" width="14" height="14"/>
+    <rect x="238" y="806" width="14" height="14"/>
+    <rect x="210" y="834" width="14" height="14"/>
+    <rect x="266" y="834" width="14" height="14"/>
+    <rect x="760" y="820" width="14" height="14"/>
+    <rect x="788" y="848" width="14" height="14"/>
+    <rect x="732" y="848" width="14" height="14"/>
+  </g>
+
+  <!-- bottle, tilted for dynamism -->
+  <g transform="rotate(26 512 512)">
+
+    <!-- glass silhouette: neck, shoulders, body, rounded base -->
+    <path d="M 452 210
+             L 452 312
+             C 452 362, 362 380, 362 446
+             L 362 776
+             Q 362 872 458 872
+             L 566 872
+             Q 662 872 662 776
+             L 662 446
+             C 662 380, 572 362, 572 312
+             L 572 210
+             Z"
+          fill="#33406B" stroke="#5A6BA8" stroke-width="6" stroke-opacity="0.55" stroke-linejoin="round"/>
+
+    <!-- flat highlight facet along left of body -->
+    <rect x="384" y="452" width="34" height="386" rx="17" fill="#46548C"/>
+    <rect x="466" y="238" width="18" height="86" rx="9" fill="#46548C"/>
+
+    <!-- lip ring -->
+    <rect x="438" y="184" width="148" height="40" rx="20" fill="#46548C"/>
+
+    <!-- cork -->
+    <rect x="456" y="80" width="112" height="120" rx="18" fill="#E9A852"/>
+    <rect x="456" y="164" width="112" height="36" rx="16" fill="#C77F35"/>
+    <rect x="472" y="94" width="52" height="18" rx="9" fill="#F6C97E"/>
+
+    <!-- constellation: edges (pruned to 6, bolder) -->
+    <g stroke="#8FD9E6" stroke-width="8" stroke-opacity="0.8" stroke-linecap="round">
+      <line x1="556" y1="468" x2="430" y2="524"/>
+      <line x1="430" y1="524" x2="482" y2="628"/>
+      <line x1="482" y1="628" x2="530" y2="732"/>
+      <line x1="556" y1="468" x2="602" y2="606"/>
+      <line x1="530" y1="732" x2="586" y2="812"/>
+      <line x1="556" y1="468" x2="512" y2="268"/>
+    </g>
+
+    <!-- constellation: nodes (one dominant north star, pruned field) -->
+    <circle cx="556" cy="468" r="80" fill="url(#starGlow)"/>
+    <circle cx="556" cy="468" r="30" fill="#FFFFFF"/>
+    <circle cx="430" cy="524" r="12" fill="#BFEDF7"/>
+    <circle cx="482" cy="628" r="16" fill="#FFFFFF"/>
+    <circle cx="602" cy="606" r="12" fill="#BFEDF7"/>
+    <circle cx="530" cy="732" r="17" fill="#FFFFFF"/>
+    <circle cx="586" cy="812" r="13" fill="#BFEDF7"/>
+    <circle cx="512" cy="268" r="8"  fill="#BFEDF7"/>
+  </g>
+</svg>
