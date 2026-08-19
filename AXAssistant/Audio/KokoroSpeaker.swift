@@ -56,8 +56,12 @@ final class KokoroSpeaker {
 
     private func loadedModel() async throws -> KokoroModel {
         if let model { return model }
+        // The text processor is REQUIRED for real speech: without it the package
+        // tokenizes raw text against a phoneme vocabulary and emits silence.
+        // (Found by ear on-device; proven by the Mac harness.)
         let loaded = try await KokoroModel.fromPretrained(
             Self.modelRepo,
+            textProcessor: KokoroMultilingualProcessor(),
             cache: HubCache(cacheDirectory: ModelManager.hubRoot)
         )
         model = loaded

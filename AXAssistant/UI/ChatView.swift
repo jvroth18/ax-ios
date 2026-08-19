@@ -57,6 +57,9 @@ struct ChatView: View {
             }
 
             HStack(spacing: 4) {
+                Button("New") { conversation.clear() }
+                    .buttonStyle(W95ButtonStyle())
+                    .disabled(conversation.messages.isEmpty || appState.mode != .idle)
                 TextField("Type a message…", text: $typedInput, axis: .vertical)
                     .font(W95.ui(13))
                     .padding(.horizontal, 6)
