@@ -43,7 +43,7 @@ struct RootView: View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 W95Desktop()
-                W95BouncingLogo()
+                W95AsciiLogo()
                 desktopSurface
                 if let active {
                     windowBody(for: active)

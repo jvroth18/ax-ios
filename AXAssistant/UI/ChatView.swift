@@ -52,6 +52,31 @@ struct ChatView: View {
                 }
             }
 
+            // One-tap tools toggle: a real W95 checkbox, always visible above input.
+            if appState.mode == .idle {
+                Button {
+                    appState.settings.toolsMode.toggle()
+                } label: {
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Rectangle().fill(.white).frame(width: 15, height: 15)
+                                .overlay(W95BevelOverlay(sunken: true))
+                            if appState.settings.toolsMode {
+                                Text("✓").font(.system(size: 11, weight: .bold)).foregroundStyle(W95.text)
+                            }
+                        }
+                        Text(appState.settings.toolsMode
+                             ? "Tools mode — AX can set reminders, timers, open apps"
+                             : "Tools mode off — conversation only")
+                            .font(W95.ui(11))
+                            .foregroundStyle(W95.shadow)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 2)
+            }
+
             // Recording replaces the input row (stable height, one Stop control)
             // rather than stacking above and shoving it under the user's thumb.
             if case .listening = appState.mode {

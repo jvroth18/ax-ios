@@ -114,11 +114,10 @@ final class ModelManager {
     }
 
     private func handleMemoryWarning() {
-        // Only drop the model if nothing is mid-turn; otherwise just trim caches.
+        // Trim MLX's buffer cache only. Do NOT unload the model — that would drop
+        // the user to the download screen mid-session; if memory is truly critical
+        // the OS will jetsam us regardless, and unloading proactively is worse UX.
         MLX.GPU.clearCache()
-        if AppState.shared.mode == .idle {
-            unload()
-        }
     }
 
     /// Weights for models no longer in the catalog are invisible to the Library and
