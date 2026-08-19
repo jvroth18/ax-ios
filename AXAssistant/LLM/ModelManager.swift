@@ -36,7 +36,21 @@ final class ModelManager {
         .urls(for: .documentDirectory, in: .userDomainMask).first!
         .appendingPathComponent("huggingface/hub")
 
-    private static let hubClient = HubClient(cache: HubCache(cacheDirectory: hubRoot))
+    private static let hubClient: HubClient = {
+        // A stalled transfer must fail loudly, not hang at 0% forever (observed
+        // on-device: a weights download dead for 2h with no error). 60s without
+        // bytes kills the request; resume picks up from completed blobs.
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 60
+        config.waitsForConnectivity = true
+        return HubClient(
+            session: URLSession(configuration: config),
+            cache: HubCache(cacheDirectory: hubRoot)
+        )
+    }()
+
+    /// The in-flight download/load, so Cancel can actually cancel it.
+    private var loadTask: Task<Void, Never>?
 
     private init() {
         Self.migrateFromCachesIfNeeded()
@@ -93,7 +107,18 @@ final class ModelManager {
     }
 
     func downloadAndLoad() async {
-        await load()
+        loadTask?.cancel()
+        let task = Task { await load() }
+        loadTask = task
+        await task.value
+    }
+
+    /// Abandon an in-flight download and return to the clean idle state.
+    /// Completed blobs stay on disk; a later Get resumes from them.
+    func cancelDownload() {
+        loadTask?.cancel()
+        loadTask = nil
+        state = .idle
     }
 
     private func load() async {
@@ -129,6 +154,8 @@ final class ModelManager {
                 id: choice.id,
                 duration: Date().timeIntervalSince(loadStart)
             )
+        } catch is CancellationError {
+            state = .idle
         } catch {
             state = .failed(error.localizedDescription)
         }

@@ -36,13 +36,18 @@ struct ModelDownloadView: View {
 
             case .downloading(let progress):
                 W95GroupBox(label: "Downloading") {
-                    Text("Copying '\(modelManager.choice.name)' from mlx-community…")
+                    Text("Copying '\(modelManager.choice.name)'…")
                         .font(W95.ui(13))
                     W95ProgressBar(value: progress)
-                    Text("\(Int(progress * 100))% complete")
+                    Text(downloadDetail(progress))
                         .font(W95.mono(11))
                         .foregroundStyle(W95.text)
+                    Text("Keep the app open. A healthy download moves within seconds.")
+                        .font(W95.ui(11))
+                        .foregroundStyle(W95.shadow)
                 }
+                Button("Cancel") { modelManager.cancelDownload() }
+                    .buttonStyle(W95ButtonStyle())
 
             case .loading:
                 HStack(spacing: 8) {
@@ -69,5 +74,10 @@ struct ModelDownloadView: View {
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(W95.face)
+    }
+
+    private func downloadDetail(_ progress: Double) -> String {
+        let totalMB = modelManager.choice.downloadGB * 1000
+        return String(format: "%.0f MB of %.0f MB (%d%%)", progress * totalMB, totalMB, Int(progress * 100))
     }
 }
