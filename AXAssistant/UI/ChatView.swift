@@ -68,11 +68,30 @@ struct ChatView: View {
                     appState.settings.toolsMode = true
                 }
                 Spacer()
-                Text(appState.settings.toolsMode
-                     ? "AX can act: reminders, timers, apps…"
-                     : "Conversation only — no actions")
-                    .font(W95.ui(10))
-                    .foregroundStyle(W95.shadow)
+                // Installed-model picker: switch the brain without leaving the chat.
+                Menu {
+                    ForEach(ModelCatalog.all.filter(modelManager.isDownloaded)) { model in
+                        Button {
+                            Task { await modelManager.switchTo(model) }
+                        } label: {
+                            if model == modelManager.choice {
+                                Label(model.name, systemImage: "checkmark")
+                            } else {
+                                Text(model.name)
+                            }
+                        }
+                    }
+                } label: {
+                    Text("▾ \(modelManager.choice.name)")
+                        .font(W95.ui(11))
+                        .foregroundStyle(W95.text)
+                        .lineLimit(1)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(W95.face)
+                        .overlay(W95BevelOverlay())
+                }
+                .disabled(appState.mode != .idle)
             }
             .padding(.horizontal, 2)
 

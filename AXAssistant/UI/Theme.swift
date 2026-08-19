@@ -84,6 +84,7 @@ extension View {
 struct W95TitleBar: View {
     let title: String
     var onClose: (() -> Void)?
+    var onMinimize: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -92,7 +93,12 @@ struct W95TitleBar: View {
                 .foregroundStyle(.white)
                 .lineLimit(1)
             Spacer()
-            controlBox("─")
+            if let onMinimize {
+                Button(action: onMinimize) { controlBox("─") }
+                    .buttonStyle(.plain)
+            } else {
+                controlBox("─")
+            }
             if let onClose {
                 Button(action: onClose) { controlBox("✕") }
                     .buttonStyle(.plain)
@@ -119,15 +125,40 @@ struct W95TitleBar: View {
 struct W95Window<Content: View>: View {
     let title: String
     var onClose: (() -> Void)?
+    var onMinimize: (() -> Void)?
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(spacing: 0) {
-            W95TitleBar(title: title, onClose: onClose)
+            W95TitleBar(title: title, onClose: onClose, onMinimize: onMinimize)
             content
         }
         .padding(3)
         .w95Raised()
+    }
+}
+
+/// A desktop icon: pixel-era pictogram on a raised tile, white label below.
+struct W95DesktopIcon: View {
+    let glyph: String
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                Text(glyph)
+                    .font(.system(size: 26))
+                    .frame(width: 52, height: 52)
+                    .background(W95.face)
+                    .overlay(W95BevelOverlay())
+                Text(label)
+                    .font(W95.ui(11))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.8), radius: 0, x: 1, y: 1)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

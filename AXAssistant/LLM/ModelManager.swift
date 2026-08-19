@@ -52,6 +52,49 @@ final class ModelManager {
     /// The in-flight download/load, so Cancel can actually cancel it.
     private var loadTask: Task<Void, Never>?
 
+    /// Library downloads that don't switch the active model: id → fraction.
+    private(set) var downloadProgress: [String: Double] = [:]
+    private var downloadTasks: [String: Task<Void, Never>] = [:]
+
+    /// Fetch a model's weights without unloading or switching the current model,
+    /// so the Library can stock up while you keep chatting.
+    func download(_ model: CatalogModel) {
+        guard downloadTasks[model.id] == nil, !isDownloaded(model) else { return }
+        guard let repoID = Repo.ID(rawValue: model.id) else { return }
+        downloadProgress[model.id] = 0
+        UIApplication.shared.isIdleTimerDisabled = true
+        let task = Task {
+            defer {
+                downloadTasks[model.id] = nil
+                downloadProgress[model.id] = nil
+                if downloadTasks.isEmpty, loadTask == nil {
+                    UIApplication.shared.isIdleTimerDisabled = false
+                }
+            }
+            do {
+                _ = try await Self.hubClient.downloadSnapshot(
+                    of: repoID,
+                    revision: "main",
+                    matching: ["*.safetensors", "*.json", "*.jinja", "*.txt"],
+                    progressHandler: { @MainActor progress in
+                        ModelManager.shared.downloadProgress[model.id] = progress.fractionCompleted
+                    }
+                )
+            } catch {
+                // Row falls back to Get; resume skips completed blobs.
+            }
+        }
+        downloadTasks[model.id] = task
+    }
+
+    func cancelDownload(of model: CatalogModel) {
+        downloadTasks[model.id]?.cancel()
+    }
+
+    func isDownloading(_ model: CatalogModel) -> Bool {
+        downloadTasks[model.id] != nil
+    }
+
     private init() {
         Self.migrateFromCachesIfNeeded()
         Self.removeOrphanedModels()

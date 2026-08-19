@@ -15,33 +15,41 @@ struct RootView: View {
     @State private var session: VoiceSession?
     @State private var path = NavigationPath()
     @State private var openMenu: String?
+    @State private var minimized = false
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
                 W95Desktop()
-                W95Window(title: "AX — \(modelManager.choice.name)") {
-                    VStack(spacing: 0) {
-                        menuBar
-                        ZStack(alignment: .top) {
-                            Group {
-                                switch modelManager.state {
-                                case .ready:
-                                    ChatView(modelManager: modelManager, conversation: conversation, session: $session)
-                                default:
-                                    ModelDownloadView(modelManager: modelManager)
+                if minimized {
+                    desktop
+                } else {
+                    W95Window(
+                        title: "AX — \(modelManager.choice.name)",
+                        onMinimize: { minimized = true }
+                    ) {
+                        VStack(spacing: 0) {
+                            menuBar
+                            ZStack(alignment: .top) {
+                                Group {
+                                    switch modelManager.state {
+                                    case .ready:
+                                        ChatView(modelManager: modelManager, conversation: conversation, session: $session)
+                                    default:
+                                        ModelDownloadView(modelManager: modelManager)
+                                    }
                                 }
-                            }
-                            // Tap-away closes an open menu before anything else happens.
-                            if openMenu != nil {
-                                Color.black.opacity(0.001)
-                                    .onTapGesture { openMenu = nil }
+                                // Tap-away closes an open menu before anything else happens.
+                                if openMenu != nil {
+                                    Color.black.opacity(0.001)
+                                        .onTapGesture { openMenu = nil }
+                                }
                             }
                         }
                     }
+                    .padding(6)
                 }
-                .padding(6)
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Dest.self) { dest in
@@ -69,6 +77,73 @@ struct RootView: View {
             appState.pendingListen = false
             startListening()
         }
+    }
+
+    // MARK: - Desktop (minimized state)
+
+    /// The whole phone becomes the machine: minimizing AX lands on a desktop with
+    /// icons, a Start menu, and a taskbar showing the one running app.
+    private var desktop: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 22) {
+                W95DesktopIcon(glyph: "🖥️", label: "AX") { minimized = false }
+                W95DesktopIcon(glyph: "💾", label: "Models") { open(.library) }
+                W95DesktopIcon(glyph: "📈", label: "Monitor") { open(.monitor) }
+                W95DesktopIcon(glyph: "⚙️", label: "Settings") { open(.settings) }
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            // Taskbar
+            HStack(spacing: 6) {
+                Menu {
+                    Button("AX") { minimized = false }
+                    Button("Model Library") { open(.library) }
+                    Button("System Monitor") { open(.monitor) }
+                    Button("Settings") { open(.settings) }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("▞").font(.system(size: 12, weight: .black)).foregroundStyle(W95.navy)
+                        Text("Start").font(W95.ui(13, bold: true)).foregroundStyle(W95.text)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(W95.face)
+                    .overlay(W95BevelOverlay())
+                }
+                Button {
+                    minimized = false
+                } label: {
+                    Text("AX — \(modelManager.choice.name)")
+                        .font(W95.ui(12))
+                        .foregroundStyle(W95.text)
+                        .lineLimit(1)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(W95.face)
+                        .overlay(W95BevelOverlay(sunken: true))
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                TimelineView(.periodic(from: .now, by: 30)) { context in
+                    Text(context.date, format: .dateTime.hour().minute())
+                        .font(W95.ui(12))
+                        .foregroundStyle(W95.text)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .overlay(W95BevelOverlay(sunken: true))
+                }
+            }
+            .padding(4)
+            .frame(maxWidth: .infinity)
+            .background(W95.face)
+            .overlay(Rectangle().fill(W95.white).frame(height: 1), alignment: .top)
+        }
+    }
+
+    private func open(_ dest: Dest) {
+        minimized = false
+        path.append(dest)
     }
 
     // MARK: - Menu bar

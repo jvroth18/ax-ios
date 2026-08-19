@@ -62,6 +62,9 @@ struct ModelLibraryView: View {
                     isLoaded: isLoaded(model),
                     isDownloaded: modelManager.isDownloaded(model),
                     isBusy: isBusy,
+                    downloadFraction: modelManager.downloadProgress[model.id],
+                    onGet: { modelManager.download(model) },
+                    onCancel: { modelManager.cancelDownload(of: model) },
                     onLoad: { Task { await modelManager.switchTo(model) } },
                     onDelete: { pendingDelete = model }
                 )
@@ -104,6 +107,9 @@ private struct ModelRow: View {
     let isLoaded: Bool
     let isDownloaded: Bool
     let isBusy: Bool
+    let downloadFraction: Double?
+    let onGet: () -> Void
+    let onCancel: () -> Void
     let onLoad: () -> Void
     let onDelete: () -> Void
 
@@ -143,20 +149,29 @@ private struct ModelRow: View {
                 }
                 Spacer(minLength: 0)
             }
-            HStack(spacing: 6) {
-                if isLoaded {
-                    Button("Loaded ✓") {}.buttonStyle(W95ButtonStyle()).disabled(true)
-                } else if isDownloaded {
-                    Button("Load") { onLoad() }.buttonStyle(W95ButtonStyle(bold: true)).disabled(isBusy)
-                } else {
-                    Button("Get (\(model.sizeLabel))") { onLoad() }
-                        .buttonStyle(W95ButtonStyle(bold: true))
-                        .disabled(isBusy)
+            if let fraction = downloadFraction {
+                HStack(spacing: 8) {
+                    W95ProgressBar(value: fraction, blocks: 12)
+                    Text("\(Int(fraction * 100))%")
+                        .font(W95.mono(10, bold: true))
+                        .foregroundStyle(W95.navy)
+                    Button("✕") { onCancel() }.buttonStyle(W95ButtonStyle())
                 }
-                if isDownloaded {
-                    Button("Remove") { onDelete() }.buttonStyle(W95ButtonStyle()).disabled(isBusy)
+            } else {
+                HStack(spacing: 6) {
+                    if isLoaded {
+                        Button("Loaded ✓") {}.buttonStyle(W95ButtonStyle()).disabled(true)
+                    } else if isDownloaded {
+                        Button("Load") { onLoad() }.buttonStyle(W95ButtonStyle(bold: true)).disabled(isBusy)
+                    } else {
+                        Button("Get (\(model.sizeLabel))") { onGet() }
+                            .buttonStyle(W95ButtonStyle(bold: true))
+                    }
+                    if isDownloaded {
+                        Button("Remove") { onDelete() }.buttonStyle(W95ButtonStyle()).disabled(isBusy)
+                    }
+                    Spacer()
                 }
-                Spacer()
             }
         }
         .padding(8)
