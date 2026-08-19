@@ -61,7 +61,7 @@ targets:
     info:
       path: AXAssistant/Resources/Info.plist
       properties:
-        CFBundleDisplayName: AX
+        CFBundleDisplayName: Bottleship
         UILaunchScreen: {}
         NSMicrophoneUsageDescription: AX records your voice request when you press the Action Button.
         NSSpeechRecognitionUsageDescription: AX transcribes your request on-device. Audio never leaves your iPhone.

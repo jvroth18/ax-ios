@@ -103,6 +103,22 @@ final class ModelManager {
     private init() {
         Self.migrateFromCachesIfNeeded()
         Self.removeOrphanedModels()
+        // iOS jetsam kills the app under memory pressure (looks like a crash);
+        // shed the model first so the OS reclaims ~2 GB instead.
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { ModelManager.shared.handleMemoryWarning() }
+        }
+    }
+
+    private func handleMemoryWarning() {
+        // Only drop the model if nothing is mid-turn; otherwise just trim caches.
+        MLX.GPU.clearCache()
+        if AppState.shared.mode == .idle {
+            unload()
+        }
     }
 
     /// Weights for models no longer in the catalog are invisible to the Library and
@@ -176,6 +192,11 @@ final class ModelManager {
         defer { UIApplication.shared.isIdleTimerDisabled = false }
         let loadStart = Date()
         do {
+            // Single-resident rule: free the voice model + Metal cache before pulling
+            // a multi-GB LLM into memory, or the two together trip jetsam and the OS
+            // kills the app mid-load (the "crash" on the 4B abliterated model).
+            KokoroSpeaker.shared.freeModel()
+            MLX.GPU.clearCache()
             // Keep Metal's buffer cache small: latency cost is minor, jetsam risk is real.
             MLX.GPU.set(cacheLimit: 512 * 1024 * 1024)
 

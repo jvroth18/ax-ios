@@ -83,6 +83,13 @@ final class KokoroSpeaker {
         releaseSession()
     }
 
+    /// Drop the voice model to free ~350 MB before a large LLM loads. It reloads
+    /// lazily on the next spoken reply.
+    func freeModel() {
+        stop()
+        model = nil
+    }
+
     // MARK: - Internals
 
     private func loadedModel() async throws -> KokoroModel {
