@@ -16,7 +16,7 @@ struct AgentLoop {
     let container: ModelContainer
     let registry: ToolRegistry
     let confirmer: any Confirmer
-    let config = AgentConfig()
+    var config = AgentConfig()
 
     struct Turn {
         let reply: String

@@ -43,7 +43,12 @@ final class Conversation {
             appState.mode = .idle
         }
 
-        let loop = AgentLoop(container: container, registry: .standard, confirmer: self)
+        let loop = AgentLoop(
+            container: container,
+            registry: .standard,
+            confirmer: self,
+            config: AgentConfig(maxToolIterations: appState.settings.maxToolIterations)
+        )
         do {
             let turn = try await loop.run(history: history, userText: text) { partial in
                 Task { @MainActor [weak self] in self?.thinkingPartial = partial }

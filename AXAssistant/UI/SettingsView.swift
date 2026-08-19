@@ -15,7 +15,19 @@ struct SettingsView: View {
                 VStack(spacing: 4) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 14) {
-                            W95GroupBox(label: "Voice") {
+                            W95GroupBox(label: "Agent") {
+                HStack(spacing: 10) {
+                    Text("Tool chain limit: \(settings.maxToolIterations)")
+                        .font(W95.ui(12))
+                    Stepper("", value: $settings.maxToolIterations, in: 1...8)
+                        .labelsHidden()
+                }
+                Text("How many tools AX may chain in one request. Higher = more capable multi-step actions, slower worst case.")
+                    .font(W95.ui(11))
+                    .foregroundStyle(W95.shadow)
+            }
+
+            W95GroupBox(label: "Voice") {
                                 Toggle("Speak replies aloud", isOn: $settings.speakReplies)
                                     .toggleStyle(W95CheckboxStyle())
                                 VStack(alignment: .leading, spacing: 2) {

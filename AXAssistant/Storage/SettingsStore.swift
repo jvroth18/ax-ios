@@ -10,6 +10,10 @@ final class SettingsStore {
     var silenceTimeout: Double {
         didSet { UserDefaults.standard.set(silenceTimeout, forKey: "silenceTimeout") }
     }
+    /// How many tool calls the agent may chain in one request (1–8).
+    var maxToolIterations: Int {
+        didSet { UserDefaults.standard.set(maxToolIterations, forKey: "maxToolIterations") }
+    }
     var registeredShortcuts: [String] {
         didSet { UserDefaults.standard.set(registeredShortcuts, forKey: "registeredShortcuts") }
     }
@@ -24,6 +28,7 @@ final class SettingsStore {
         let defaults = UserDefaults.standard
         speakReplies = defaults.object(forKey: "speakReplies") as? Bool ?? true
         silenceTimeout = defaults.object(forKey: "silenceTimeout") as? Double ?? 1.2
+        maxToolIterations = defaults.object(forKey: "maxToolIterations") as? Int ?? 3
         registeredShortcuts = defaults.stringArray(forKey: "registeredShortcuts") ?? []
         endpointConnectors = Self.loadJSON(key: "endpointConnectors") ?? []
         appSummaryConnectors = Self.loadJSON(key: "appSummaryConnectors") ?? []
