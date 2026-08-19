@@ -305,6 +305,55 @@ struct W95Desktop: View {
     }
 }
 
+/// The bouncing-logo screensaver: a bottle badge drifts at constant velocity and
+/// reflects off the four edges, recoloring on each bounce — the DVD-logo classic.
+/// Position is a pure function of elapsed time (triangle wave), so it's smooth and
+/// state-free.
+struct W95BouncingLogo: View {
+    private let speed: CGSize = .init(width: 46, height: 34)  // pt/sec
+    private let size: CGFloat = 64
+    private let palette: [Color] = [
+        W95.navy, W95.titleB, W95.maroon,
+        Color(red: 0.0, green: 0.5, blue: 0.0),   // green
+        Color(red: 0.85, green: 0.55, blue: 0.0), // amber
+        Color(red: 0.6, green: 0.3, blue: 0.8),   // purple
+    ]
+
+    var body: some View {
+        GeometryReader { geo in
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let travelX = max(geo.size.width - size, 1)
+                let travelY = max(geo.size.height - size, 1)
+                let (x, bx) = triangle(t * speed.width, travelX)
+                let (y, by) = triangle(t * speed.height, travelY)
+                let color = palette[(bx + by) % palette.count]
+
+                Text("🍾")
+                    .font(.system(size: size * 0.6))
+                    .frame(width: size, height: size)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(color.opacity(0.28))
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(color.opacity(0.6), lineWidth: 2))
+                    )
+                    .position(x: x + size / 2, y: y + size / 2)
+            }
+        }
+        .allowsHitTesting(false)
+        .ignoresSafeArea()
+    }
+
+    /// Position bouncing in [0, span] plus the number of bounces so far (for color).
+    private func triangle(_ distance: Double, _ span: Double) -> (Double, Int) {
+        let period = 2 * span
+        let phase = distance.truncatingRemainder(dividingBy: period)
+        let pos = phase <= span ? phase : period - phase
+        let bounces = Int(distance / span)
+        return (pos, bounces)
+    }
+}
+
 /// Hourglass wait indicator (the 90s spinner).
 struct W95Hourglass: View {
     @State private var flipped = false

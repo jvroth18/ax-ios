@@ -36,13 +36,15 @@ struct RootView: View {
     /// active == nil with windows open means "everything minimized" — bare desktop.
     @State private var openWindows: [AppWindow] = [.chat]
     @State private var active: AppWindow? = .chat
+    @State private var iconPositions: [String: CGPoint] = RootView.loadIconPositions()
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 W95Desktop()
-                desktopIcons
+                W95BouncingLogo()
+                desktopSurface
                 if let active {
                     windowBody(for: active)
                         .padding(4)
@@ -138,13 +140,47 @@ struct RootView: View {
 
     // MARK: - Desktop
 
-    private var desktopIcons: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            ForEach(AppWindow.allCases) { window in
+    /// Draggable icons over the bouncing-logo background. Each icon remembers where
+    /// you drop it (persisted); tap opens, drag repositions — like a real desktop.
+    private var desktopSurface: some View {
+        GeometryReader { geo in
+            ForEach(Array(AppWindow.allCases.enumerated()), id: \.element) { index, window in
                 W95DesktopIcon(glyph: window.glyph, label: window.title) { open(window) }
+                    .position(iconPositions[window.rawValue] ?? Self.defaultIconPosition(index))
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                iconPositions[window.rawValue] = clamp(value.location, in: geo.size)
+                            }
+                            .onEnded { _ in saveIconPositions() }
+                    )
             }
         }
-        .padding(20)
+    }
+
+    private static func defaultIconPosition(_ index: Int) -> CGPoint {
+        CGPoint(x: 52, y: 60 + Double(index) * 92)
+    }
+
+    private func clamp(_ point: CGPoint, in size: CGSize) -> CGPoint {
+        CGPoint(
+            x: min(max(point.x, 40), size.width - 40),
+            y: min(max(point.y, 44), size.height - 44)
+        )
+    }
+
+    private func saveIconPositions() {
+        let encodable = iconPositions.mapValues { [$0.x, $0.y] }
+        if let data = try? JSONEncoder().encode(encodable) {
+            UserDefaults.standard.set(data, forKey: "desktopIconPositions")
+        }
+    }
+
+    private static func loadIconPositions() -> [String: CGPoint] {
+        guard let data = UserDefaults.standard.data(forKey: "desktopIconPositions"),
+              let raw = try? JSONDecoder().decode([String: [Double]].self, from: data)
+        else { return [:] }
+        return raw.compactMapValues { $0.count == 2 ? CGPoint(x: $0[0], y: $0[1]) : nil }
     }
 
     // MARK: - Taskbar
