@@ -58,7 +58,10 @@ struct RootView: View {
         }
         .tint(W95.navy)
         .preferredColorScheme(.light)
-        .task { await modelManager.loadIfDownloaded() }
+        .task {
+            MetricsStore.shared.startSampling()
+            await modelManager.loadIfDownloaded()
+        }
         .sheet(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 })) {
             OnboardingView(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 }))
         }

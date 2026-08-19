@@ -9,6 +9,7 @@ struct ChatView: View {
     let conversation: Conversation
     @Binding var session: VoiceSession?
     @State private var typedInput = ""
+    @FocusState private var inputFocused: Bool
 
     var body: some View {
         VStack(spacing: 4) {
@@ -40,6 +41,10 @@ struct ChatView: View {
                     .padding(8)
                 }
                 .w95Well(background: .white)
+                // Drag down over the log peels the keyboard away; a tap outside
+                // the field dismisses it outright.
+                .scrollDismissesKeyboard(.interactively)
+                .simultaneousGesture(TapGesture().onEnded { inputFocused = false })
                 .onChange(of: conversation.messages) { _, messages in
                     if let last = messages.last {
                         withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
@@ -57,7 +62,15 @@ struct ChatView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 5)
                     .w95Well(background: .white)
+                    .focused($inputFocused)
                     .onSubmit(submitTyped)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") { inputFocused = false }
+                                .font(W95.ui(13, bold: true))
+                        }
+                    }
                 Button("Send") { submitTyped() }
                     .buttonStyle(W95ButtonStyle(bold: true))
                     .disabled(appState.mode != .idle

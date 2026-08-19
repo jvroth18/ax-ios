@@ -6,8 +6,10 @@ import UIKit
 struct MetricsView: View {
     private let store = MetricsStore.shared
     @Environment(\.dismiss) private var dismiss
-    @State private var snapshot: SystemSnapshot?
     @State private var copiedReport = false
+
+    // Sampling runs app-wide in MetricsStore; this screen just renders it.
+    private var snapshot: SystemSnapshot? { store.lastSnapshot }
 
     /// M1 budget: stay under 2.5 GB in the memory gauge.
     private let footprintBudget = 2_500.0 * 1_048_576
@@ -71,12 +73,6 @@ struct MetricsView: View {
             .padding(6)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .task {
-            while !Task.isCancelled {
-                snapshot = store.systemSnapshot()
-                try? await Task.sleep(for: .seconds(2))
-            }
-        }
     }
 
     private var gaugesRow: some View {

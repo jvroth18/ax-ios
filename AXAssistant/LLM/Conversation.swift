@@ -27,7 +27,6 @@ final class Conversation {
     private var history: [ChatMessage] = []
     private static let maxHistoryMessages = 12
 
-    private let synthesizer = AVSpeechSynthesizer()
 
     func send(_ text: String, modelManager: ModelManager, appState: AppState) async {
         messages.append(DisplayMessage(role: .user, text: text))
@@ -64,7 +63,7 @@ final class Conversation {
 
             HistoryStore.record(transcript: text, turn: turn)
             if appState.settings.speakReplies, !turn.reply.isEmpty {
-                synthesizer.speak(AVSpeechUtterance(string: turn.reply))
+                ReplySpeaker.shared.speak(turn.reply)
             }
         } catch {
             messages.append(DisplayMessage(role: .assistant, text: "Something went wrong: \(error.localizedDescription)"))

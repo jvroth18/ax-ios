@@ -5,8 +5,8 @@ import MLX
 
 /// One completed model generation, built from MLX's `GenerateCompletionInfo` plus
 /// timings measured around the stream.
-struct GenerationRecord: Identifiable, Sendable {
-    let id = UUID()
+struct GenerationRecord: Identifiable, Sendable, Codable {
+    var id = UUID()
     let date: Date
     let modelID: String
     let promptTokens: Int
@@ -54,10 +54,76 @@ final class MetricsStore {
     /// First run includes the weight download; subsequent launches are load-only.
     private(set) var modelLoadDuration: TimeInterval?
 
+    /// Freshest system sample; updated by the app-wide sampling loop.
+    private(set) var lastSnapshot: SystemSnapshot?
+
     private let maxRecords = 100
+    private var samplingTask: Task<Void, Never>?
+    private var lastSave = Date.distantPast
 
     private init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
+        loadFromDisk()
+    }
+
+    /// App-wide sampling: runs for the app's lifetime (iOS suspends it with the app),
+    /// so the monitor's traces cover the whole session, not just time spent on the
+    /// monitor screen. Started once from RootView.
+    func startSampling() {
+        guard samplingTask == nil else { return }
+        samplingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                self.lastSnapshot = self.systemSnapshot()
+                if Date().timeIntervalSince(self.lastSave) > 30 {
+                    self.saveToDisk()
+                }
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
+    }
+
+    // MARK: - Persistence
+
+    private struct Persisted: Codable {
+        var generations: [GenerationRecord]
+        var peakFootprintBytes: Int
+        var footprintTrace: [Double]
+        var gpuActiveTrace: [Double]
+        var loadedModelID: String?
+        var modelLoadDuration: TimeInterval?
+    }
+
+    private static var storeURL: URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("ax-metrics.json")
+    }
+
+    private func loadFromDisk() {
+        guard let data = try? Data(contentsOf: Self.storeURL),
+              let persisted = try? JSONDecoder().decode(Persisted.self, from: data) else { return }
+        generations = persisted.generations
+        peakFootprintBytes = persisted.peakFootprintBytes
+        footprintTrace = persisted.footprintTrace
+        gpuActiveTrace = persisted.gpuActiveTrace
+        loadedModelID = persisted.loadedModelID
+        modelLoadDuration = persisted.modelLoadDuration
+    }
+
+    private func saveToDisk() {
+        lastSave = Date()
+        let persisted = Persisted(
+            generations: generations,
+            peakFootprintBytes: peakFootprintBytes,
+            footprintTrace: footprintTrace,
+            gpuActiveTrace: gpuActiveTrace,
+            loadedModelID: loadedModelID,
+            modelLoadDuration: modelLoadDuration
+        )
+        if let data = try? JSONEncoder().encode(persisted) {
+            try? data.write(to: Self.storeURL, options: .atomic)
+        }
     }
 
     func record(_ record: GenerationRecord) {
@@ -66,6 +132,7 @@ final class MetricsStore {
             generations.removeFirst(generations.count - maxRecords)
         }
         peakFootprintBytes = max(peakFootprintBytes, record.footprintBytes)
+        saveToDisk()
     }
 
     func recordModelLoad(id: String, duration: TimeInterval) {

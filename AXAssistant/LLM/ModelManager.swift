@@ -27,6 +27,34 @@ final class ModelManager {
     private(set) var state: State = .idle
     private(set) var container: ModelContainer?
 
+    /// Weights root: Documents so iOS never purges the ~1 GB models (Caches, the
+    /// HubClient default, is purgeable) and they're visible in the Files app.
+    /// Layout is HubCache's: <root>/models--<org>--<name>/{blobs,refs,snapshots}.
+    private static let hubRoot: URL = FileManager.default
+        .urls(for: .documentDirectory, in: .userDomainMask).first!
+        .appendingPathComponent("huggingface/hub")
+
+    private static let hubClient = HubClient(cache: HubCache(cacheDirectory: hubRoot))
+
+    private init() {
+        Self.migrateFromCachesIfNeeded()
+    }
+
+    /// Earlier builds let HubClient default to Caches; move anything there into
+    /// Documents so users don't re-download (or silently lose) models.
+    private static func migrateFromCachesIfNeeded() {
+        let oldRoot = FileManager.default
+            .urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("huggingface/hub")
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: oldRoot.path) else { return }
+        try? FileManager.default.createDirectory(at: hubRoot, withIntermediateDirectories: true)
+        for entry in entries where entry.hasPrefix("models--") {
+            let destination = hubRoot.appendingPathComponent(entry)
+            guard !FileManager.default.fileExists(atPath: destination.path) else { continue }
+            try? FileManager.default.moveItem(at: oldRoot.appendingPathComponent(entry), to: destination)
+        }
+    }
+
     /// The selected catalog model. Stored by HF repo id; unknown ids (e.g. a model
     /// removed from the catalog) fall back to the default.
     var choice: CatalogModel {
@@ -62,7 +90,11 @@ final class ModelManager {
                 let fraction = progress.fractionCompleted
                 Task { @MainActor in self?.reportDownloadProgress(fraction) }
             }
-            let container = try await #huggingFaceLoadModelContainer(
+            // Expanded form of #huggingFaceLoadModelContainer so we can pass our
+            // Documents-rooted HubClient instead of the default (Caches) one.
+            let container = try await loadModelContainer(
+                from: #hubDownloader(Self.hubClient),
+                using: #huggingFaceTokenizerLoader(),
                 configuration: ModelConfiguration(id: choice.id),
                 progressHandler: handler
             )
@@ -85,7 +117,7 @@ final class ModelManager {
 
     /// Weights are re-downloadable; don't let them bloat the user's iCloud backup.
     private func excludeWeightsFromBackup() {
-        guard var dir = Self.hubCacheDirectory else { return }
+        var dir = Self.hubRoot.deletingLastPathComponent()  // Documents/huggingface
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try? dir.setResourceValues(values)
@@ -114,20 +146,20 @@ final class ModelManager {
         if model == choice, container != nil {
             unload()
         }
-        if let dir = repoDirectory(for: model) {
-            try? FileManager.default.removeItem(at: dir)
-        }
+        try? FileManager.default.removeItem(at: repoDirectory(for: model))
     }
 
     func isDownloaded(_ model: CatalogModel) -> Bool {
-        guard let dir = repoDirectory(for: model) else { return false }
-        return FileManager.default.fileExists(atPath: dir.path)
+        // A repo dir can exist with an aborted download; require a snapshot.
+        let snapshots = repoDirectory(for: model).appendingPathComponent("snapshots")
+        let contents = (try? FileManager.default.contentsOfDirectory(atPath: snapshots.path)) ?? []
+        return !contents.isEmpty
     }
 
     /// Actual bytes on disk, so the library can show real sizes next to the estimates.
     func sizeOnDisk(_ model: CatalogModel) -> Int64 {
-        guard let dir = repoDirectory(for: model),
-              let files = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey])
+        let dir = repoDirectory(for: model)
+        guard let files = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey])
         else { return 0 }
         var total: Int64 = 0
         for case let url as URL in files {
@@ -140,14 +172,7 @@ final class ModelManager {
         ModelCatalog.all.filter(isDownloaded).map(sizeOnDisk).reduce(0, +)
     }
 
-    private func repoDirectory(for model: CatalogModel) -> URL? {
-        Self.hubCacheDirectory?.appendingPathComponent("models/\(model.id)")
-    }
-
-    /// swift-transformers' default HubApi download base. Deliberately in Documents so the
-    /// weights are visible (and deletable) in the Files app.
-    private static var hubCacheDirectory: URL? {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-            .first?.appendingPathComponent("huggingface")
+    private func repoDirectory(for model: CatalogModel) -> URL {
+        Self.hubRoot.appendingPathComponent("models--" + model.id.replacingOccurrences(of: "/", with: "--"))
     }
 }
