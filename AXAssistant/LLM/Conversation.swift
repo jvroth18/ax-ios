@@ -68,7 +68,13 @@ final class Conversation {
 
             HistoryStore.record(transcript: text, turn: turn)
             if appState.settings.speakReplies, !turn.reply.isEmpty {
-                ReplySpeaker.shared.speak(turn.reply)
+                if appState.settings.useKokoroVoice {
+                    let voice = appState.settings.kokoroVoice
+                    let reply = turn.reply
+                    Task.detached { await KokoroSpeaker.shared.speak(reply, voice: voice) }
+                } else {
+                    ReplySpeaker.shared.speak(turn.reply)
+                }
             }
         } catch {
             messages.append(DisplayMessage(role: .assistant, text: "Something went wrong: \(error.localizedDescription)"))

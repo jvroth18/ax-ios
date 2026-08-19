@@ -30,6 +30,20 @@ struct SettingsView: View {
             W95GroupBox(label: "Voice") {
                                 Toggle("Speak replies aloud", isOn: $settings.speakReplies)
                                     .toggleStyle(W95CheckboxStyle())
+                                Toggle("Kokoro voice (natural, on-device)", isOn: $settings.useKokoroVoice)
+                                    .toggleStyle(W95CheckboxStyle())
+                                if settings.useKokoroVoice {
+                                    Picker("Voice", selection: $settings.kokoroVoice) {
+                                        ForEach(KokoroSpeaker.voices, id: \.id) { voice in
+                                            Text(voice.label).tag(voice.id)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(W95.navy)
+                                    Text("Kokoro-82M, a small open TTS model. First use downloads ~330 MB; runs fully on-device beside the language model.")
+                                        .font(W95.ui(11))
+                                        .foregroundStyle(W95.shadow)
+                                }
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("End recording after \(settings.silenceTimeout, specifier: "%.1f")s of silence")
                                         .font(W95.ui(12))

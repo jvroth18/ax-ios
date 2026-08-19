@@ -50,13 +50,21 @@ struct AgentLoop {
                 parsed = try ToolCallParser.parse(completion, tools: registry.specs)
             } catch {
                 // Malformed call: tell the model what went wrong and let it retry once.
-                guard iteration < config.maxToolIterations else { throw error }
-                messages.append(.init(role: .assistant, content: completion))
-                messages.append(.init(
-                    role: .tool,
-                    content: PromptBuilder.toolResponse(.failure("Invalid tool call: \(error)"))
-                ))
-                continue
+                if iteration < config.maxToolIterations {
+                    messages.append(.init(role: .assistant, content: completion))
+                    messages.append(.init(
+                        role: .tool,
+                        content: PromptBuilder.toolResponse(.failure("Invalid tool call: \(error)"))
+                    ))
+                    continue
+                }
+                // Out of retries: surface whatever the model said as a plain reply
+                // instead of erroring the turn. Weak/finetuned models emit broken
+                // calls often; the user should still see the response.
+                let fallback = completion.isEmpty
+                    ? "(The model didn't produce a usable reply — try rephrasing, or switch models.)"
+                    : completion
+                return Turn(reply: fallback, toolCalls: allCalls, toolResults: allResults)
             }
 
             guard !parsed.toolCalls.isEmpty, iteration < config.maxToolIterations else {

@@ -30,7 +30,8 @@ final class ModelManager {
     /// Weights root: Documents so iOS never purges the ~1 GB models (Caches, the
     /// HubClient default, is purgeable) and they're visible in the Files app.
     /// Layout is HubCache's: <root>/models--<org>--<name>/{blobs,refs,snapshots}.
-    private static let hubRoot: URL = FileManager.default
+    /// Shared with KokoroSpeaker so voice weights get the same treatment.
+    static let hubRoot: URL = FileManager.default
         .urls(for: .documentDirectory, in: .userDomainMask).first!
         .appendingPathComponent("huggingface/hub")
 

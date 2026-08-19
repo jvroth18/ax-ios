@@ -22,6 +22,10 @@ packages:
     from: 1.3.0
   AXCore:
     path: Packages/AXCore
+  # Kokoro-82M TTS (open, on-device). Pin: dep floor matches our exact mlx-swift-lm.
+  MLXAudioSwift:
+    url: https://github.com/Blaizzy/mlx-audio-swift
+    exactVersion: 0.1.3
 
 configs:
   Debug: debug
@@ -52,6 +56,8 @@ targets:
       # SwiftPM links it lazily so including it here keeps one target simple.
       - package: MLXSwiftLM
         product: MLXVLM
+      - package: MLXAudioSwift
+        product: MLXAudioTTS
     info:
       path: AXAssistant/Resources/Info.plist
       properties:

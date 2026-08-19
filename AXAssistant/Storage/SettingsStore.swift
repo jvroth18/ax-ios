@@ -14,6 +14,13 @@ final class SettingsStore {
     var maxToolIterations: Int {
         didSet { UserDefaults.standard.set(maxToolIterations, forKey: "maxToolIterations") }
     }
+    /// Speak replies with Kokoro-82M (open, on-device, natural) instead of the system voice.
+    var useKokoroVoice: Bool {
+        didSet { UserDefaults.standard.set(useKokoroVoice, forKey: "useKokoroVoice") }
+    }
+    var kokoroVoice: String {
+        didSet { UserDefaults.standard.set(kokoroVoice, forKey: "kokoroVoice") }
+    }
     var registeredShortcuts: [String] {
         didSet { UserDefaults.standard.set(registeredShortcuts, forKey: "registeredShortcuts") }
     }
@@ -29,6 +36,8 @@ final class SettingsStore {
         speakReplies = defaults.object(forKey: "speakReplies") as? Bool ?? true
         silenceTimeout = defaults.object(forKey: "silenceTimeout") as? Double ?? 1.2
         maxToolIterations = defaults.object(forKey: "maxToolIterations") as? Int ?? 3
+        useKokoroVoice = defaults.object(forKey: "useKokoroVoice") as? Bool ?? false
+        kokoroVoice = defaults.string(forKey: "kokoroVoice") ?? "af_heart"
         registeredShortcuts = defaults.stringArray(forKey: "registeredShortcuts") ?? []
         endpointConnectors = Self.loadJSON(key: "endpointConnectors") ?? []
         appSummaryConnectors = Self.loadJSON(key: "appSummaryConnectors") ?? []
