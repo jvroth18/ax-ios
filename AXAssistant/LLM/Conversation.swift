@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import AVFoundation
 import AXCore
+import MLXLMCommon
 
 /// One ongoing chat thread. Voice requests and typed messages both land here, so the
 /// model keeps context across turns ("what's on my calendar?" … "move the first one").
