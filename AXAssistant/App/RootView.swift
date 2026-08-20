@@ -107,14 +107,18 @@ struct RootView: View {
                     }
                     ZStack(alignment: .top) {
                         Group {
-                            switch modelManager.state {
-                            case .ready:
+                            if ProcessInfo.processInfo.environment["UITEST_SHOW_CHAT_KEYBOARD"] == "1" {
                                 ChatView(modelManager: modelManager, conversation: conversation, session: $session)
-                            default:
-                                ModelDownloadView(
-                                    modelManager: modelManager,
-                                    onOpenLibrary: { open(.library) }
-                                )
+                            } else {
+                                switch modelManager.state {
+                                case .ready:
+                                    ChatView(modelManager: modelManager, conversation: conversation, session: $session)
+                                default:
+                                    ModelDownloadView(
+                                        modelManager: modelManager,
+                                        onOpenLibrary: { open(.library) }
+                                    )
+                                }
                             }
                         }
                         if openMenu != nil {
