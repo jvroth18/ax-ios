@@ -36,6 +36,12 @@ struct AgentLoop {
         userText: String,
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws -> Turn {
+        // Every caller gets the same no-tool guarantee, including eval/debug paths that
+        // do not enter through Conversation.
+        if let reply = RequestPolicy.directReply(for: userText) {
+            return Turn(reply: reply, toolCalls: [], toolResults: [])
+        }
+
         let context = PromptBuilder.Context(
             currentDateTime: Self.formattedNow(),
             registeredShortcuts: await MainActor.run { AppState.shared.settings.registeredShortcuts },
@@ -92,6 +98,31 @@ struct AgentLoop {
 
             guard !parsed.toolCalls.isEmpty else {
                 return Turn(reply: parsed.text, toolCalls: allCalls, toolResults: allResults)
+            }
+
+            let unauthorized = parsed.toolCalls.filter {
+                !RequestPolicy.allows(tool: $0.name, for: userText)
+            }
+            if !unauthorized.isEmpty {
+                // Never execute or display an unrequested communication action. Give the
+                // model one bounded chance to answer normally with an explicit correction.
+                if iteration < config.maxToolIterations {
+                    messages.append(.init(role: .assistant, content: completion))
+                    messages.append(.init(
+                        role: .tool,
+                        content: PromptBuilder.toolResponse(.failure(
+                            "Blocked unrequested tool call. The user did not ask to \(unauthorized.map(\.name).joined(separator: ", ")). Answer the request in plain language without a tool."
+                        ))
+                    ))
+                    continue
+                }
+                return Turn(
+                    reply: parsed.text.isEmpty
+                        ? "I won't start a call or message unless you explicitly ask me to."
+                        : parsed.text,
+                    toolCalls: allCalls,
+                    toolResults: allResults
+                )
             }
 
             // On the last allowed iteration the model asked for another tool instead of

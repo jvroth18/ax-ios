@@ -96,14 +96,10 @@ struct W95TitleBar: View {
             if let onMinimize {
                 Button(action: onMinimize) { controlBox("─") }
                     .buttonStyle(.plain)
-            } else {
-                controlBox("─")
             }
             if let onClose {
                 Button(action: onClose) { controlBox("✕") }
                     .buttonStyle(.plain)
-            } else {
-                controlBox("✕")
             }
         }
         .padding(.horizontal, 6)

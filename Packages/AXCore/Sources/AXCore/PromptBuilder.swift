@@ -94,6 +94,11 @@ public enum PromptBuilder {
 
                 Anything the workflow can't cover — an action needing confirmation, or one \
                 with more than one argument — you call directly, in a later step.
+
+                Example — "Turn the flashlight on and off 5 times":
+                <tool_call>
+                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, toggle_flashlight:off", "times": 5}}
+                </tool_call>
                 """
             }
             lines.append(workflow)
@@ -110,6 +115,8 @@ public enum PromptBuilder {
         - "Remind me…" requests are create_reminder, never set_timer — timers are only for \
         counting down a duration ("set a timer for 10 minutes").
         - If the request is ambiguous, ask a short clarifying question instead of guessing.
+        - Greetings and small talk never use a tool. "Hi", "hello", and "hey" get a short plain-language reply.
+        - For an explicitly repeated sequence, generate one repeat_steps call. Put one full cycle in "steps" and the requested repetition count in "times".
         - If no tool fits, answer briefly in plain language. Keep spoken-style answers to one or two sentences.
         - Never invent tool names or shortcut names that are not listed.
         """)

@@ -9,7 +9,7 @@ struct ChatView: View {
     let conversation: Conversation
     @Binding var session: VoiceSession?
     @State private var typedInput = ""
-    @FocusState private var inputFocused: Bool
+    @State private var keyboardPresented = ProcessInfo.processInfo.environment["UITEST_SHOW_CHAT_KEYBOARD"] == "1"
 
     var body: some View {
         VStack(spacing: 4) {
@@ -43,10 +43,7 @@ struct ChatView: View {
                     .padding(8)
                 }
                 .w95Well(background: .white)
-                // Drag down over the log peels the keyboard away; a tap outside
-                // the field dismisses it outright.
-                .scrollDismissesKeyboard(.interactively)
-                .simultaneousGesture(TapGesture().onEnded { inputFocused = false })
+                .simultaneousGesture(TapGesture().onEnded { keyboardPresented = false })
                 .onChange(of: conversation.messages) { _, messages in
                     if let last = messages.last {
                         withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
@@ -85,21 +82,28 @@ struct ChatView: View {
                 RecordingOverlay(session: session)
             } else {
                 HStack(spacing: 6) {
-                    TextField("Type a message…", text: $typedInput, axis: .vertical)
-                        .font(W95.ui(13))
-                        .lineLimit(1...5)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 5)
-                        .w95Well(background: .white)
-                        .focused($inputFocused)
-                        .onSubmit(submitTyped)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") { inputFocused = false }
-                                    .font(W95.ui(13, bold: true))
+                    Button { keyboardPresented = true } label: {
+                        HStack(spacing: 2) {
+                            Text(typedInput.isEmpty ? "Type a message…" : typedInput)
+                                .foregroundStyle(typedInput.isEmpty ? W95.shadow : W95.text)
+                                .lineLimit(2)
+                            if keyboardPresented {
+                                Rectangle()
+                                    .fill(W95.text)
+                                    .frame(width: 1, height: 16)
+                                    .w95Blink()
                             }
+                            Spacer(minLength: 0)
                         }
+                        .font(W95.ui(13))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 7)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .w95Well(background: .white)
+                    .accessibilityLabel("Message")
+                    .accessibilityValue(typedInput)
                     // One context-sensitive key: Send when there's text, mic when empty.
                     if hasDraft {
                         Button("Send") { submitTyped() }
@@ -115,6 +119,15 @@ struct ChatView: View {
 
             // Mode lives in the status bar, INS/CAPS-style — not a whole toolbar row.
             W95StatusBar(fields: [statusText, appState.settings.toolsMode ? "Tools: On" : "Tools: Off"])
+
+            if keyboardPresented, case .idle = appState.mode {
+                W95Keyboard(
+                    text: $typedInput,
+                    onReturn: submitTyped,
+                    onDismiss: { keyboardPresented = false }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .padding(4)
         .background(W95.face)
@@ -172,6 +185,7 @@ struct ChatView: View {
         let text = typedInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, appState.mode == .idle else { return }
         typedInput = ""
+        keyboardPresented = false
         Task { await conversation.send(text, modelManager: modelManager, appState: appState) }
     }
 }

@@ -236,11 +236,17 @@ public enum EvalSuite {
         ),
     ]
 
-    // MARK: - Negative (8)
+    // MARK: - Negative (9)
 
     /// `.pass` means no tool fired. The old suite had none of these, so the failure mode
     /// that actually costs a user something — a spurious calendar write — was unmeasurable.
     public static let negative: [EvalCase] = [
+        EvalCase(
+            id: "negative-standalone-greeting",
+            transcript: "Hi",
+            caseClass: .negative,
+            note: "Regression: a standalone greeting once attempted to compose a message."
+        ),
         EvalCase(
             id: "negative-capital-of-france",
             transcript: "What's the capital of France?",
@@ -455,7 +461,7 @@ public enum EvalSuite {
         ),
         EvalCase(
             id: "workflow-blink-five",
-            transcript: "Blink the flashlight five times",
+            transcript: "Turn the flashlight on and off 5 times",
             caseClass: .workflow,
             expected: [
                 ExpectedCall("repeat_steps", [
