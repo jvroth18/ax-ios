@@ -70,4 +70,14 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertNotNil(DateArgument.parse("2026-08-17T17:00:00"))
         XCTAssertNotNil(DateArgument.parse("2026-08-17"))
     }
+
+    func testPromptSeparatesGreetingsFromExplicitRepeatedActions() {
+        let prompt = PromptBuilder.systemPrompt(
+            tools: [tool],
+            context: .init(currentDateTime: "Monday 2026-08-17 14:00, America/New_York")
+        )
+        XCTAssertTrue(prompt.contains("Greetings and small talk never use a tool"))
+        XCTAssertTrue(prompt.contains("Turn the flashlight on and off 5 times"))
+        XCTAssertTrue(prompt.contains(#""times": 5"#))
+    }
 }

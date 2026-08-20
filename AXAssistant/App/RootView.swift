@@ -44,22 +44,16 @@ struct RootView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                W95Desktop()
-                W95AsciiLogo()
-                desktopSurface
-                if let active {
-                    windowBody(for: active)
-                        .padding(4)
-                }
-            }
-            taskbar
+            windowBody(for: active ?? .chat)
+            phoneNavigation
         }
-        .background(W95.desktop)
+        .background(W95.face)
         .tint(W95.navy)
         .preferredColorScheme(.light)
         .task {
             MetricsStore.shared.startSampling()
+            // Let SwiftUI commit the first frame before model disk maintenance/loading.
+            await Task.yield()
             await modelManager.loadIfDownloaded()
         }
         .sheet(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 })) {
@@ -105,11 +99,7 @@ struct RootView: View {
     private func windowBody(for window: AppWindow) -> some View {
         switch window {
         case .chat:
-            W95Window(
-                title: "AX — \(modelManager.choice.name)",
-                onClose: { close(.chat) },
-                onMinimize: { minimize(.chat) }
-            ) {
+            W95Window(title: "AX — \(modelManager.choice.name)") {
                 VStack(spacing: 0) {
                     menuBar
                     if let status = actionButtonStatus {
@@ -117,14 +107,18 @@ struct RootView: View {
                     }
                     ZStack(alignment: .top) {
                         Group {
-                            switch modelManager.state {
-                            case .ready:
+                            if ProcessInfo.processInfo.environment["UITEST_SHOW_CHAT_KEYBOARD"] == "1" {
                                 ChatView(modelManager: modelManager, conversation: conversation, session: $session)
-                            default:
-                                ModelDownloadView(
-                                    modelManager: modelManager,
-                                    onOpenLibrary: { open(.library) }
-                                )
+                            } else {
+                                switch modelManager.state {
+                                case .ready:
+                                    ChatView(modelManager: modelManager, conversation: conversation, session: $session)
+                                default:
+                                    ModelDownloadView(
+                                        modelManager: modelManager,
+                                        onOpenLibrary: { open(.library) }
+                                    )
+                                }
                             }
                         }
                         if openMenu != nil {
@@ -137,21 +131,54 @@ struct RootView: View {
         case .library:
             ModelLibraryView(
                 modelManager: modelManager,
-                onClose: { close(.library) },
-                onMinimize: { minimize(.library) }
+                onClose: { open(.chat) },
+                onMinimize: { open(.chat) }
             )
         case .monitor:
             MetricsView(
-                onClose: { close(.monitor) },
-                onMinimize: { minimize(.monitor) }
+                onClose: { open(.chat) },
+                onMinimize: { open(.chat) }
             )
         case .settings:
             SettingsView(
                 modelManager: modelManager,
-                onClose: { close(.settings) },
-                onMinimize: { minimize(.settings) }
+                onClose: { open(.chat) },
+                onMinimize: { open(.chat) }
             )
         }
+    }
+
+    // MARK: - Phone navigation
+
+    /// The old desktop/taskbar shell treated a 390-point phone like a resizable PC.
+    /// Keep the visual theme, but give navigation a predictable thumb-sized home.
+    private var phoneNavigation: some View {
+        HStack(spacing: 0) {
+            ForEach(AppWindow.allCases) { window in
+                Button {
+                    open(window)
+                } label: {
+                    VStack(spacing: 2) {
+                        Text(window.glyph).font(.system(size: 17))
+                        Text(window == .chat ? "Chat" : window.title)
+                            .font(W95.ui(10, bold: active == window))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(W95.text)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(active == window ? W95.faceLight : W95.face)
+                    .overlay(W95BevelOverlay(sunken: active == window))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(window.title)
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 3)
+        .padding(.bottom, 4)
+        .background(W95.face)
+        .overlay(Rectangle().fill(W95.white).frame(height: 1), alignment: .top)
     }
 
     // MARK: - Desktop
