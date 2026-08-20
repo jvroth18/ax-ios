@@ -12,7 +12,7 @@ public enum EvalSuite {
 
     /// Bump when cases change semantics, so an old report is never silently compared to a
     /// new suite.
-    public static let version = "2026.08.19-1"
+    public static let version = "2026.08.20-1"
 
     public static var all: [EvalCase] {
         singleTool + dateExtraction + negative + multiStep + ambiguity + spuriousExtra + workflow
@@ -236,7 +236,7 @@ public enum EvalSuite {
         ),
     ]
 
-    // MARK: - Negative (9)
+    // MARK: - Negative (11)
 
     /// `.pass` means no tool fired. The old suite had none of these, so the failure mode
     /// that actually costs a user something — a spurious calendar write — was unmeasurable.
@@ -293,6 +293,18 @@ public enum EvalSuite {
             id: "negative-explain-acronym",
             transcript: "What does the acronym API stand for?",
             caseClass: .negative
+        ),
+        EvalCase(
+            id: "negative-explain-error-message",
+            transcript: "Explain this error message in plain English",
+            caseClass: .negative,
+            note: "The word message describes text; it is not permission to compose one."
+        ),
+        EvalCase(
+            id: "negative-how-phone-works",
+            transcript: "How does a phone work?",
+            caseClass: .negative,
+            note: "The word phone is a topic; it is not permission to dial."
         ),
     ]
 
@@ -434,7 +446,7 @@ public enum EvalSuite {
         ),
     ]
 
-    // MARK: - Workflow (5)
+    // MARK: - Workflow (6)
 
     /// Repetition is where a chat-shaped agent loop stops working: every hand-back costs a
     /// full generation over a prompt that just grew, and a small model loses its count
@@ -448,7 +460,12 @@ public enum EvalSuite {
             caseClass: .workflow,
             expected: [
                 ExpectedCall("repeat_steps", [
-                    "steps": .contains("toggle_flashlight"),
+                    "steps": .workflowCycle([
+                        WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                        WorkflowStep(tool: "wait", value: "0.25"),
+                        WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                        WorkflowStep(tool: "wait", value: "0.25"),
+                    ]),
                     "times": .number(10),
                 ]),
                 ExpectedCall("call_number", ["number": .digits("6316452763")]),
@@ -465,7 +482,23 @@ public enum EvalSuite {
             caseClass: .workflow,
             expected: [
                 ExpectedCall("repeat_steps", [
-                    "steps": .contains("toggle_flashlight"),
+                    "steps": .workflowCycleAnyOf([
+                        [
+                            WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                            WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                        ],
+                        [
+                            WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                            WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                            WorkflowStep(tool: "wait", value: "0.25"),
+                        ],
+                        [
+                            WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                            WorkflowStep(tool: "wait", value: "0.25"),
+                            WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                            WorkflowStep(tool: "wait", value: "0.25"),
+                        ],
+                    ]),
                     "times": .number(5),
                 ]),
             ],
@@ -476,7 +509,11 @@ public enum EvalSuite {
             transcript: "Turn the flashlight on, wait three seconds, then turn it off",
             caseClass: .workflow,
             expected: [
-                ExpectedCall("repeat_steps", ["steps": .contains("wait")]),
+                ExpectedCall("repeat_steps", ["steps": .workflowCycle([
+                    WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                    WorkflowStep(tool: "wait", value: "3"),
+                    WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                ])]),
             ],
             note: """
             Sequenced, not repeated. Scored on the workflow tool because the pause is the \
@@ -503,6 +540,22 @@ public enum EvalSuite {
             A "10" next to a duration, deliberately close to the phrasing of the repeat \
             cases. Catches a model that has learned "10 ⇒ repeat_steps".
             """
+        ),
+        EvalCase(
+            id: "workflow-x-then-y-then-z",
+            transcript: "Turn on the flashlight, then pause the music, then set a timer for 2 minutes",
+            caseClass: .workflow,
+            expected: [
+                ExpectedCall("repeat_steps", [
+                    "steps": .workflowCycle([
+                        WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                        WorkflowStep(tool: "play_music", value: "pause"),
+                        WorkflowStep(tool: "set_timer", value: "2"),
+                    ]),
+                    "times": .number(1),
+                ]),
+            ],
+            note: "Generic ordered x → y → z sequence, compiled and executed deterministically."
         ),
     ]
 }

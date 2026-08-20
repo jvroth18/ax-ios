@@ -47,11 +47,14 @@ public struct PromptProfile: Sendable, Equatable {
     /// The conservative default: everything on. What every model got before profiles.
     public static let standard = PromptProfile(name: "standard")
 
-    /// ≤2B. Terse, maximally explicit, short chains.
+    /// ≤2B. Terse and maximally explicit. The old "do exactly one thing" wording made
+    /// Qwen 1.7B stop after the first leg of a compound request, so compound calls are
+    /// allowed in one reply and the continuation fallback remains explicit.
     public static let small = PromptProfile(
         name: "small",
         extraRules: [
-            "Do exactly one thing per reply: either one <tool_call> block or a short answer.",
+            "After every tool result, reread the original request and call the next unfinished action. Never repeat an action whose tool result says it succeeded.",
+            "After repeat_steps succeeds, its inner actions are finished. Never call those inner tools again; continue only the action after the repeated sequence.",
             "Never explain what you are about to do — just emit the call.",
         ],
         suggestedMaxToolIterations: 4

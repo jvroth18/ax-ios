@@ -112,14 +112,14 @@ final class ModelManager {
         }
     }
 
-    /// Disk migration and catalog cleanup used to run in `init`, blocking SwiftUI's
-    /// first frame while it walked gigabytes of model files. Run it after launch on a
-    /// background executor, once, before checking whether the selected model exists.
+    /// Legacy-cache migration used to run in `init`, blocking SwiftUI's first frame while
+    /// it walked gigabytes of model files. Run it after launch on a background executor.
+    /// Never delete repositories merely because a catalog version no longer lists them:
+    /// downloaded models are user data and catalog changes must not disturb them.
     private func prepareStorageIfNeeded() async {
         guard !storagePrepared else { return }
         await Task.detached(priority: .utility) {
             Self.migrateFromCachesIfNeeded()
-            Self.removeOrphanedModels()
         }.value
         storagePrepared = true
     }
@@ -129,23 +129,6 @@ final class ModelManager {
         // the user to the download screen mid-session; if memory is truly critical
         // the OS will jetsam us regardless, and unloading proactively is worse UX.
         MLX.GPU.clearCache()
-    }
-
-    /// Weights for models no longer in the catalog are invisible to the Library and
-    /// would squat on storage forever; delete them. (Every download comes from the
-    /// catalog, so anything unmatched is a removed entry.)
-    nonisolated private static func removeOrphanedModels() {
-        // The voice stack (Kokoro + its G2P assets) shares this store but isn't a
-        // catalog entry — never treat it as an orphan.
-        var known = Set(ModelCatalog.all.map {
-            "models--" + $0.id.replacingOccurrences(of: "/", with: "--")
-        })
-        known.insert("models--" + KokoroSpeaker.modelRepo.replacingOccurrences(of: "/", with: "--"))
-        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: hubRoot.path) else { return }
-        for entry in entries
-        where entry.hasPrefix("models--") && !known.contains(entry) && !entry.contains("beshkenadze") {
-            try? FileManager.default.removeItem(at: hubRoot.appendingPathComponent(entry))
-        }
     }
 
     /// Earlier builds let HubClient default to Caches; move anything there into
@@ -361,6 +344,15 @@ final class ModelManager {
             total += Int64((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
         }
         return total
+    }
+
+    /// Commit recorded by Hugging Face's cache for the installed `main` ref. This is
+    /// read-only metadata used by eval reports; it never changes or cleans the model.
+    func installedRevision(of model: CatalogModel) -> String? {
+        let ref = repoDirectory(for: model).appendingPathComponent("refs/main")
+        guard let raw = try? String(contentsOf: ref, encoding: .utf8) else { return nil }
+        let revision = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return revision.isEmpty ? nil : revision
     }
 
     var totalBytesOnDisk: Int64 {

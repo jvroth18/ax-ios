@@ -9,7 +9,7 @@ import AXCore
 /// number into a commit message. This tool makes the two halves that don't need MLX —
 /// building the pinned prompt, and scoring completions — runnable and diffable anywhere.
 ///
-///   swift run ax-eval prompt                       # the exact pinned system prompt
+///   swift run ax-eval prompt [model-id] [outFile]  # exact pinned shipping prompt/profile
 ///   swift run ax-eval manifest [outDir]            # committable description of the suite
 ///   swift run ax-eval score completions.json [out] # score recorded completions
 ///
@@ -134,14 +134,28 @@ func judge(_ evalCase: EvalCase, completions: [String]) -> EvalJudgment {
     return EvalJudge.judge(evalCase, calls: calls, replyText: lastText)
 }
 
-func runPrompt() {
-    print(PromptBuilder.systemPrompt(
+func runPrompt(_ arguments: [String]) {
+    let profile = arguments.count > 2
+        ? PromptProfile.forModel(arguments[2])
+        : PromptProfile.standard
+    let prompt = PromptBuilder.systemPrompt(
         tools: EvalToolCatalog.specs,
         context: .init(
             currentDateTime: EvalClock.pinned.promptDateTime,
             registeredShortcuts: EvalToolCatalog.pinnedShortcuts
-        )
-    ))
+        ),
+        profile: profile
+    )
+    if arguments.count > 3 {
+        do {
+            try write(Data(prompt.utf8), to: URL(fileURLWithPath: arguments[3]))
+        } catch {
+            FileHandle.standardError.write(Data("ax-eval: \(error)\n".utf8))
+            exit(1)
+        }
+    } else {
+        print(prompt)
+    }
 }
 
 let arguments = CommandLine.arguments
@@ -149,7 +163,7 @@ do {
     switch arguments.count > 1 ? arguments[1] : "" {
     case "manifest": try runManifest(arguments)
     case "score": try runScore(arguments)
-    case "prompt": runPrompt()
+    case "prompt": runPrompt(arguments)
     default:
         throw CLIError.usage("ax-eval <prompt|manifest|score> …")
     }

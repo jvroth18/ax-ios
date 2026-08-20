@@ -1,14 +1,15 @@
 import SwiftUI
+import UIKit
 
 /// A compact in-app QWERTY keyboard. It keeps the muscle-memory layout of the
 /// iOS keyboard while making text entry feel like part of AX's visual world.
 struct W95Keyboard: View {
     @Binding var text: String
-    let onReturn: () -> Void
     let onDismiss: () -> Void
 
     @State private var uppercase = false
     @State private var showsNumbers = false
+    @State private var hapticTrigger = 0
 
     private let letterRows = [
         Array("qwertyuiop"),
@@ -22,21 +23,43 @@ struct W95Keyboard: View {
     ]
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             HStack {
-                Text(showsNumbers ? "SYMBOLS" : uppercase ? "CAPS" : "QWERTY")
+                Text(showsNumbers ? "SYMBOLS" : uppercase ? "SHIFT" : "QWERTY")
                     .font(W95.ui(10, bold: true))
                     .foregroundStyle(W95.shadow)
                 Spacer()
-                Button("Hide") { onDismiss() }
+                Button("Paste") {
+                    if let pasted = UIPasteboard.general.string, !pasted.isEmpty {
+                        text.append(pasted)
+                        hapticTrigger += 1
+                    }
+                }
                     .font(W95.ui(11, bold: true))
                     .buttonStyle(.plain)
+                    .accessibilityHint("Appends text from the clipboard")
+                Button("Hide") {
+                    hapticTrigger += 1
+                    onDismiss()
+                }
+                    .font(W95.ui(11, bold: true))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Hide keyboard")
             }
 
             ForEach(Array(activeRows.enumerated()), id: \.offset) { row, keys in
                 HStack(spacing: 4) {
+                    if row == 1 && !showsNumbers {
+                        Spacer().frame(width: 14)
+                    }
                     if row == 2 && !showsNumbers {
-                        key("⇧", width: 42, selected: uppercase) {
+                        key(
+                            "⇧",
+                            width: 44,
+                            selected: uppercase,
+                            accessibilityLabel: "Shift",
+                            selectionState: uppercase
+                        ) {
                             uppercase.toggle()
                         }
                     }
@@ -44,19 +67,35 @@ struct W95Keyboard: View {
                         key(label(for: character)) { insert(character) }
                     }
                     if row == 2 {
-                        key("⌫", width: 42) { text = String(text.dropLast()) }
-                            .accessibilityLabel("Delete")
+                        key(
+                            "⌫",
+                            width: 44,
+                            enabled: !text.isEmpty,
+                            accessibilityLabel: "Delete"
+                        ) { text = String(text.dropLast()) }
+                    }
+                    if row == 1 && !showsNumbers {
+                        Spacer().frame(width: 14)
                     }
                 }
             }
 
             HStack(spacing: 5) {
-                key(showsNumbers ? "ABC" : "123", width: 52) { showsNumbers.toggle() }
-                key(",", width: 34) { text.append(",") }
-                key("space") { text.append(" ") }
-                key(".", width: 34) { text.append(".") }
-                key("return", width: 70, enabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
-                    onReturn()
+                key(
+                    showsNumbers ? "ABC" : "123",
+                    width: 54,
+                    accessibilityLabel: showsNumbers ? "Letters" : "Numbers"
+                ) { showsNumbers.toggle() }
+                key(",", width: 44, accessibilityLabel: "Comma") { text.append(",") }
+                key("space", accessibilityLabel: "Space") { text.append(" ") }
+                key(".", width: 44, accessibilityLabel: "Period") { text.append(".") }
+                key(
+                    "return",
+                    width: 72,
+                    enabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                    accessibilityLabel: "Return"
+                ) {
+                    text.append("\n")
                 }
             }
         }
@@ -65,6 +104,7 @@ struct W95Keyboard: View {
         .background(W95.face)
         .overlay(W95BevelOverlay())
         .animation(.easeOut(duration: 0.15), value: showsNumbers)
+        .sensoryFeedback(.impact(weight: .light), trigger: hapticTrigger)
     }
 
     private var activeRows: [[Character]] { showsNumbers ? numberRows : letterRows }
@@ -83,19 +123,42 @@ struct W95Keyboard: View {
         width: CGFloat? = nil,
         selected: Bool = false,
         enabled: Bool = true,
+        accessibilityLabel: String? = nil,
+        selectionState: Bool? = nil,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button {
+            action()
+            hapticTrigger += 1
+        } label: {
             Text(title)
                 .font(W95.ui(title.count > 2 ? 11 : 16, bold: title.count > 2))
                 .foregroundStyle(enabled ? W95.text : W95.shadow)
                 .frame(maxWidth: width == nil ? .infinity : nil)
-                .frame(width: width, height: 34)
+                .frame(width: width, height: 44)
                 .background(selected ? W95.white : W95.face)
-                .overlay(W95BevelOverlay())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(W95KeyboardKeyStyle(selected: selected))
         .disabled(!enabled)
-        .accessibilityLabel(title)
+        .accessibilityLabel(accessibilityLabel ?? title)
+        .accessibilityValue(selectionState.map { $0 ? "On" : "Off" } ?? "")
+    }
+}
+
+/// Compact enough for the in-app layout, but with the same physical target and pressed
+/// travel as a native key. The inverted bevel is the app's Windows 95 equivalent of an
+/// iOS key popover.
+private struct W95KeyboardKeyStyle: ButtonStyle {
+    let selected: Bool
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(selected ? W95.white : W95.face)
+            .overlay(W95BevelOverlay(sunken: configuration.isPressed && isEnabled))
+            .offset(
+                x: configuration.isPressed && isEnabled ? 1 : 0,
+                y: configuration.isPressed && isEnabled ? 1 : 0
+            )
     }
 }

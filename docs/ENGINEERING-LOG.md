@@ -1,4 +1,4 @@
-# Engineering log — 18–19 August 2026
+# Engineering log — 18–20 August 2026
 
 What changed, what it cost, and what was measured rather than assumed. Written for whoever
 picks this up next, including a future version of us who has forgotten why.
@@ -210,3 +210,54 @@ badge does not mean the assistant still works.
 3. **Hybrid routing to the Mac** for requests the memory ceiling puts out of reach.
 4. Settings still uses iOS navigation for its sub-pages — the last place the Windows
    metaphor breaks. A tabbed property sheet is the period-correct fix.
+
+---
+
+## 9. 20 August reliability recovery
+
+The failure report combined three independent regressions: launch work made the first screen
+appear blank for several seconds, permissive intent matching turned ordinary language into
+message or phone calls, and the workflow eval declared success without executing the actions
+inside `repeat_steps`. The last bug is why the model could say it had blinked the flashlight
+five times while the harness had observed no flashlight call at all.
+
+**Startup.** SwiftData history setup is now lazy and only occurs when History is opened.
+On an iPhone 17 Pro simulator the chat and custom keyboard were rendered in the one-second
+startup capture; before the change that capture was still a blank white screen.
+
+**Intent safety.** Exact standalone greetings are handled as conversation before generation.
+Message composition now requires an SMS/text/send intent (or `message` used as a verb), and
+phone calls require call/dial/ring language. Regression cases cover `Hi`, requests for jokes,
+`Explain this error message`, and `How does a phone work?` as non-tool replies.
+
+**Executable workflows.** `repeat_steps` now compiles a deterministic plan and executes the
+real primitive tools through an injected registry. The shared compiler enforces an explicit
+allowlist, argument contracts, 1...50 repetitions, at most 200 expanded actions, positive
+waits, and a 120-second wait budget. Repeated flashlight cycles receive a 0.25-second dwell
+when the model omits one so the hardware transition is visible. Execution stops at the first
+failure or cancellation. The eval records and compares the exact expanded primitive trace,
+so on-only, reversed, incomplete, or unexecuted workflows fail rather than receiving syntax
+credit.
+
+**Chained requests.** The small-model prompt no longer says to do exactly one thing per
+reply. A successful workflow result explicitly tells the model to continue every remaining
+action from the original request, and same-response mutating calls execute serially. The
+suite now includes exact five- and ten-cycle flashlight workflows, ten cycles followed by a
+phone call, and flashlight -> music -> timer ordering.
+
+**Keyboard.** The in-app keyboard keeps the Windows 95 visual language but now follows native
+QWERTY geometry: a centered A row, symmetric Shift/Delete, 44-point-high keys, Return as a
+newline, and a separate Send action. Keys visibly depress and produce local light haptics;
+Paste, tail-visible long drafts, and VoiceOver labels cover the minimum long-prompt workflow.
+Full caret/selection editing for VoiceOver remains a P1 follow-up.
+
+**Evidence.** `swift test` passes 139 tests. The current 52-case suite manifest and exact
+expanded traces are committed. A cached, offline Mac run used the shipping small-model prompt
+and `mlx-community/Qwen3-1.7B-4bit` revision
+`3b1b1768f8f8cf8351c712464f906e86c2b8269e`; all six checks passed at each of three seeds
+(18/18), including greeting/no-tool, five-cycle blink, ten-cycle blink then call, and x/y/z.
+The signed iPhone build succeeded and installed over the existing app. Read-back before and
+after installation showed the same 923.2 MB model snapshot and revision, so the update did not
+delete or redownload user models. The phone was locked when the launch command ran, so tactile
+haptic strength and visible hardware flashlight timing still require one unlocked-device smoke
+test; simulator screenshots cannot prove either physical effect.

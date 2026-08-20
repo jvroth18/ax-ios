@@ -195,7 +195,13 @@ struct AgentLoop {
         let allReadOnly = calls.allSatisfy { registry.tool(named: $0.name)?.isReadOnly == true }
         guard calls.count > 1, allReadOnly else {
             var results: [ToolResult] = []
-            for call in calls { results.append(await execute(call, cache: cache)) }
+            for call in calls {
+                let result = await execute(call, cache: cache)
+                results.append(result)
+                // "x then y" is a dependency, not a bag of side effects. If x failed,
+                // do not run y and pretend the requested sequence completed.
+                if !result.success { break }
+            }
             return results
         }
         return await withTaskGroup(of: (Int, ToolResult).self) { group in

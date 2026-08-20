@@ -8,7 +8,7 @@
       "Paris."
     ],
     "workflow-blink-five": [
-      "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.5, toggle_flashlight:off, wait:0.5\", \"times\": 5}}\n</tool_call>"
+      "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
     ]
   }
 }
