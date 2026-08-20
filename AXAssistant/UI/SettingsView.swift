@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
@@ -124,7 +125,12 @@ struct SettingsView: View {
 
                             W95GroupBox(label: "More") {
                                 link("Connectors") { ConnectorsView() }
-                                link("Interaction history") { HistoryView() }
+                                // SwiftData store creation can take seconds on a cold
+                                // launch. History is secondary, so open its container only
+                                // when the user actually enters this screen.
+                                link("Interaction history") {
+                                    HistoryView().modelContainer(for: Interaction.self)
+                                }
                                 #if DEBUG
                                 link("Tool-call eval") { EvalView(modelManager: modelManager) }
                                 #if AX_DRIVER

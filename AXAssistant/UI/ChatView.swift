@@ -87,6 +87,7 @@ struct ChatView: View {
                             Text(typedInput.isEmpty ? "Type a message…" : typedInput)
                                 .foregroundStyle(typedInput.isEmpty ? W95.shadow : W95.text)
                                 .lineLimit(2)
+                                .truncationMode(.head)
                             if keyboardPresented {
                                 Rectangle()
                                     .fill(W95.text)
@@ -104,6 +105,7 @@ struct ChatView: View {
                     .w95Well(background: .white)
                     .accessibilityLabel("Message")
                     .accessibilityValue(typedInput)
+                    .accessibilityHint("Opens the AX keyboard. Use the separate Send button to submit.")
                     // One context-sensitive key: Send when there's text, mic when empty.
                     if hasDraft {
                         Button("Send") { submitTyped() }
@@ -123,7 +125,6 @@ struct ChatView: View {
             if keyboardPresented, case .idle = appState.mode {
                 W95Keyboard(
                     text: $typedInput,
-                    onReturn: submitTyped,
                     onDismiss: { keyboardPresented = false }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))

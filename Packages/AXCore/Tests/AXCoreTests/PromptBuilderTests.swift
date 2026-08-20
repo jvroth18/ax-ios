@@ -58,6 +58,21 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertEqual(decoded["content"]?.stringValue, "Reminder created")
     }
 
+    func testSmallProfileContinuesCompoundRequestsWithoutRepeatingWork() {
+        let prompt = PromptBuilder.systemPrompt(
+            tools: [tool],
+            context: .init(currentDateTime: "2026-08-17"),
+            profile: .small
+        )
+        XCTAssertFalse(prompt.contains("Do exactly one thing per reply"))
+        XCTAssertFalse(prompt.contains("Emit at most one tool call per reply"))
+        XCTAssertTrue(prompt.contains("call the next unfinished action"))
+        XCTAssertTrue(prompt.contains("Never repeat an action whose tool result says it succeeded"))
+        XCTAssertTrue(prompt.contains("Never call those inner tools again"))
+        XCTAssertTrue(prompt.contains("toggle_flashlight:on, play_music:pause, set_timer:2"))
+        XCTAssertTrue(prompt.contains("call_number"))
+    }
+
     /// The prompt and the parser must agree on one format. They drifted apart once —
     /// the prompt taught a zone-less date-time and create_reminder rejected it.
     func testDateRuleTeachesAFormatTheParserAccepts() {

@@ -5,7 +5,7 @@ import Foundation
 /// Lives in AXCore rather than beside the tool because it's pure parsing — the part most
 /// likely to meet input a model invented — and everything pure in this package is covered
 /// by `swift test` rather than discovered on a phone.
-public struct WorkflowStep: Sendable, Equatable {
+public struct WorkflowStep: Sendable, Equatable, Codable {
     public let tool: String
     public let value: String?
 
@@ -18,6 +18,7 @@ public struct WorkflowStep: Sendable, Equatable {
         case tooManyArguments(tool: String, count: Int)
         case missingValue(tool: String, argument: String)
         case notANumber(argument: String, value: String)
+        case valueNotAllowed(tool: String, argument: String, value: String, allowed: [String])
 
         public var description: String {
             switch self {
@@ -27,6 +28,8 @@ public struct WorkflowStep: Sendable, Equatable {
                 return "\(tool) needs a value for \(argument)"
             case .notANumber(let argument, let value):
                 return "\"\(value)\" is not a number for \(argument)"
+            case .valueNotAllowed(let tool, let argument, let value, let allowed):
+                return "\(tool).\(argument)=\"\(value)\" is not one of [\(allowed.joined(separator: ", "))]"
             }
         }
     }
@@ -77,13 +80,27 @@ public struct WorkflowStep: Sendable, Equatable {
         }
         switch spec.parameters.properties?[key]?.type ?? .string {
         case .number, .integer:
-            guard let number = Double(value) else {
+            guard let number = Double(value), number.isFinite else {
                 throw ParseError.notANumber(argument: key, value: value)
             }
             return [key: .number(number)]
         case .boolean:
-            return [key: .bool(["true", "yes", "on", "1"].contains(value.lowercased()))]
+            let normalized = value.lowercased()
+            let truthy = ["true", "yes", "on", "1"]
+            let falsey = ["false", "no", "off", "0"]
+            guard truthy.contains(normalized) || falsey.contains(normalized) else {
+                throw ParseError.valueNotAllowed(
+                    tool: spec.name, argument: key, value: value, allowed: truthy + falsey
+                )
+            }
+            return [key: .bool(truthy.contains(normalized))]
         default:
+            if let allowed = spec.parameters.properties?[key]?.enumValues,
+               !allowed.contains(where: { $0.caseInsensitiveCompare(value) == .orderedSame }) {
+                throw ParseError.valueNotAllowed(
+                    tool: spec.name, argument: key, value: value, allowed: allowed
+                )
+            }
             return [key: .string(value)]
         }
     }

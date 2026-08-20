@@ -95,6 +95,16 @@ final class EvalSuiteTests: XCTestCase {
                         arguments[key] = .number(value)
                     case .digits(let value):
                         arguments[key] = .string(value)
+                    case .workflowCycle(let steps):
+                        arguments[key] = .string(
+                            steps.map { "\($0.tool):\($0.value ?? "")" }
+                                .joined(separator: ",")
+                        )
+                    case .workflowCycleAnyOf(let alternatives):
+                        arguments[key] = .string(
+                            alternatives[0].map { "\($0.tool):\($0.value ?? "")" }
+                                .joined(separator: ",")
+                        )
                     case .resolvedDateAnyOf(let expectations, _):
                         let formatter = ISO8601DateFormatter()
                         formatter.formatOptions = [.withInternetDateTime]

@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 @main
 struct AXAssistantApp: App {
@@ -14,6 +13,5 @@ struct AXAssistantApp: App {
                     ShortcutTool.handleCallback(url: url)
                 }
         }
-        .modelContainer(for: Interaction.self)
     }
 }
