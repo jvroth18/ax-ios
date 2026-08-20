@@ -37,6 +37,17 @@ Two levers follow from this, in order of value:
 1. **Reuse the KV cache across iterations within a turn.** The system prompt is
    byte-identical for the life of a turn, so iterations 2+ should not re-read it at all.
    No capability risk — it is the same tokens either way.
-2. **Send fewer schemas.** Cutting 14 tools to ~5 saves roughly 900 tokens, but risks the
-   model not knowing a tool exists, so it must be measured on the eval suite before it is
-   trusted.
+2. **Send fewer schemas** (`ToolRouter`, Settings → "Send only relevant tools", default off).
+
+### Router, measured on the Mac harness (Qwen3-1.7B-4bit, 4 cases)
+
+| | Tools in prompt | Prompt tokens | Prefill | Score |
+|---|---|---|---|---|
+| Full catalog | 14 | 1,658–1,683 | 1.04–1.17 s | 4/4 |
+| Routed | 3–4 | 904–988 | 0.60–0.88 s | 4/4 |
+
+**−45% prompt, −43% prefill, no accuracy change** — on four cases, which is suggestive and
+not conclusive. It stays off by default until the full 43-case suite runs both ways on
+device; the number that would justify flipping it is the `negative` and `ambiguity` classes
+holding, since those are where a missing schema would show up as the model quietly
+answering in prose instead of acting.
