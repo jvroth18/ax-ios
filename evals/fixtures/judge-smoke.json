@@ -1,0 +1,14 @@
+{
+  "model": "fixture/hand-written",
+  "completions": {
+    "single-flashlight-on": [
+      "<tool_call>\n{\"name\": \"toggle_flashlight\", \"arguments\": {\"state\": \"on\"}}\n</tool_call>"
+    ],
+    "negative-capital-of-france": [
+      "Paris."
+    ],
+    "workflow-blink-five": [
+      "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.5, toggle_flashlight:off, wait:0.5\", \"times\": 5}}\n</tool_call>"
+    ]
+  }
+}

@@ -15,6 +15,35 @@ jobs:
         working-directory: Packages/AXCore
         run: swift test
 
+      # Gates the scoring path end to end — parser, matchers, contracts, report writer and
+      # the CLI — against completions whose correct outcome is known by construction.
+      #
+      # It deliberately does NOT gate model behaviour: recorded completions are frozen
+      # text, so a prompt change cannot move them. Only re-running the model against the
+      # suite can catch that, and it needs a GPU these runners don't have.
+      - name: Score judge fixture
+        working-directory: Packages/AXCore
+        run: |
+          swift run ax-eval score ../../evals/fixtures/judge-smoke.json "$RUNNER_TEMP/evalout"
+          python3 - "$RUNNER_TEMP/evalout" <<'PY'
+          import json, pathlib, sys
+          expected = {"single-flashlight-on", "negative-capital-of-france", "workflow-blink-five"}
+          report = json.loads(next(pathlib.Path(sys.argv[1]).glob("results-*.json")).read_text())
+          passed = {r["id"] for r in report["results"] if r["passed"]}
+          missing = expected - passed
+          if missing:
+              print("judge regression — these fixture cases stopped passing:", sorted(missing))
+              for result in report["results"]:
+                  if result["id"] in missing:
+                      print(f"  {result['id']}: {result['outcomeKind']} — {result['detail']}")
+              sys.exit(1)
+          unexpected = passed - expected
+          if unexpected:
+              print("fixture scored cases it has no recording for:", sorted(unexpected))
+              sys.exit(1)
+          print(f"judge fixture OK ({len(passed)}/{len(expected)})")
+          PY
+
   app-build-check:
     name: AXAssistant compile check (${{ matrix.flags || 'default' }})
     runs-on: macos-26
