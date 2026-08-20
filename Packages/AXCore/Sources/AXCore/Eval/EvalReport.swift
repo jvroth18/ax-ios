@@ -108,6 +108,38 @@ public struct EvalReport: Sendable, Codable {
         return (subset.filter(\.passed).count, subset.count)
     }
 
+    /// Wall-clock spread across cases. Correctness alone hides the regression that
+    /// matters most for a voice assistant: 9/9 taking forty seconds is worse than 8/9
+    /// taking four, and nothing in a pass/fail count says so.
+    public struct Latency: Sendable, Equatable {
+        public let median: Double
+        public let p95: Double
+        public let slowest: [(id: String, seconds: Double)]
+
+        public static func == (a: Latency, b: Latency) -> Bool {
+            a.median == b.median && a.p95 == b.p95
+                && a.slowest.map(\.id) == b.slowest.map(\.id)
+        }
+    }
+
+    public var latency: Latency? {
+        let timed = results.compactMap { result -> (String, Double)? in
+            guard let seconds = result.durationSeconds else { return nil }
+            return (result.id, seconds)
+        }
+        guard !timed.isEmpty else { return nil }
+        let sorted = timed.map(\.1).sorted()
+        func quantile(_ q: Double) -> Double {
+            let index = Int((Double(sorted.count - 1) * q).rounded())
+            return sorted[min(max(index, 0), sorted.count - 1)]
+        }
+        return Latency(
+            median: quantile(0.5),
+            p95: quantile(0.95),
+            slowest: timed.sorted { $0.1 > $1.1 }.prefix(3).map { (id: $0.0, seconds: $0.1) }
+        )
+    }
+
     /// How many passing cases were never dry-run against a tool's real acceptance rules.
     public var uncoveredPasses: Int {
         results.filter { $0.passed && !$0.executionCovered }.count
@@ -139,6 +171,14 @@ public struct EvalReport: Sendable, Codable {
         lines.append("- Reference \"now\" pinned to **\(referenceNow)**")
         lines.append("- Prompt profile: **\(promptProfile)**")
         lines.append("- **Overall: \(passed)/\(total)** (\(Self.percent(passed, total)))")
+        if let latency {
+            lines.append(String(
+                format: "- Latency: median %.1fs · p95 %.1fs · slowest %@",
+                latency.median, latency.p95,
+                latency.slowest.map { String(format: "%@ (%.1fs)", $0.id, $0.seconds) }
+                    .joined(separator: ", ")
+            ))
+        }
         if uncoveredPasses > 0 {
             lines.append("- \(uncoveredPasses) passing case(s) had **no execution coverage** — "
                          + "arguments were scored, but no tool validated them.")

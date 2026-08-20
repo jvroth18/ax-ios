@@ -21,3 +21,22 @@ Notes:
   download screen mid-session, and if memory is truly critical the OS jetsams us anyway.
 - `LLMGenerator` calls `MLX.GPU.clearCache()` after every generation so KV/scratch
   buffers don't accumulate across turns, and caps `maxTokens` at 640 to bound KV growth.
+
+
+## Prompt prefill cost (measured 2026-08-19, Mac harness, Qwen3-1.7B-4bit)
+
+| Prompt | Tokens | Prefill | Rate |
+|---|---|---|---|
+| Tools mode: 14 tool schemas + workflow guidance | 1,658–1,683 | 1.04–1.17 s | ~1,500 tok/s |
+
+This is paid on **every generation**, including every iteration of a tool chain — a
+three-step chain re-reads the whole catalog three times. The Mac runs generation at roughly
+2× the phone (92 vs 45.6 tok/s), so the phone equivalent is ~2 s per iteration.
+
+Two levers follow from this, in order of value:
+1. **Reuse the KV cache across iterations within a turn.** The system prompt is
+   byte-identical for the life of a turn, so iterations 2+ should not re-read it at all.
+   No capability risk — it is the same tokens either way.
+2. **Send fewer schemas.** Cutting 14 tools to ~5 saves roughly 900 tokens, but risks the
+   model not knowing a tool exists, so it must be measured on the eval suite before it is
+   trusted.
