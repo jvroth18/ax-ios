@@ -2,7 +2,7 @@
 
 Reference "now" for every case: **Wednesday 2026-08-19 14:30, America/New_York**.
 
-43 cases across 6 classes.
+49 cases across 7 classes.
 
 ## Single tool (10)
 
@@ -36,10 +36,11 @@ Reference "now" for every case: **Wednesday 2026-08-19 14:30, America/New_York**
 | `date-reminder-no-time` | "Remind me to buy milk" | create_reminder · create_reminder.due, create_reminder.title |
 | `date-reminder-day-after-tomorrow` | "Remind me to send the invoice the day after tomorrow at ten in the morning" | create_reminder · create_reminder.due, create_reminder.title |
 
-## Negative (no tool) (8)
+## Negative (no tool) (9)
 
 | Case | Transcript | Expects |
 | --- | --- | --- |
+| `negative-standalone-greeting` | "Hi" | no tool call |
 | `negative-capital-of-france` | "What's the capital of France?" | no tool call |
 | `negative-small-talk` | "How's your day going?" | no tool call |
 | `negative-thanks` | "Thanks, that's all for now" | no tool call |
@@ -76,3 +77,13 @@ Reference "now" for every case: **Wednesday 2026-08-19 14:30, America/New_York**
 | `extra-timer-and-weather` | "Set a timer for five minutes, and what's the weather like out there?" | set_timer · set_timer.minutes |
 | `extra-self-correction` | "Set a timer for ten minutes — actually no, make it twenty" | set_timer · set_timer.minutes |
 | `extra-two-legitimate-calls` | "What's on my calendar today, and remind me to water the plants" | read_next_events → create_reminder · create_reminder.due, create_reminder.title |
+
+## Workflow (repetition) (5)
+
+| Case | Transcript | Expects |
+| --- | --- | --- |
+| `workflow-blink-ten-then-call` | "Toggle the light on and off then pause. Do this 10 times and then call 6316452763" | repeat_steps → call_number · repeat_steps.steps, repeat_steps.times, call_number.number |
+| `workflow-blink-five` | "Turn the flashlight on and off 5 times" | repeat_steps · repeat_steps.steps, repeat_steps.times |
+| `workflow-pause-between-actions` | "Turn the flashlight on, wait three seconds, then turn it off" | repeat_steps · repeat_steps.steps |
+| `workflow-single-action-no-repeat` | "Turn on the flashlight" | toggle_flashlight · toggle_flashlight.state |
+| `workflow-timer-not-repeat` | "Set a timer for 10 minutes" | set_timer · set_timer.minutes |

@@ -626,6 +626,17 @@
       "expected" : [
 
       ],
+      "id" : "negative-standalone-greeting",
+      "note" : "Regression: a standalone greeting once attempted to compose a message.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Hi"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
       "id" : "negative-capital-of-france",
       "orderMatters" : false,
       "requiresQuestion" : false,
@@ -986,6 +997,135 @@
       "orderMatters" : false,
       "requiresQuestion" : false,
       "transcript" : "What's on my calendar today, and remind me to water the plants"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "contains" : {
+                "_0" : "toggle_flashlight"
+              }
+            },
+            "times" : {
+              "number" : {
+                "_0" : 10,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        },
+        {
+          "arguments" : {
+            "number" : {
+              "digits" : {
+                "_0" : "6316452763"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "call_number"
+        }
+      ],
+      "id" : "workflow-blink-ten-then-call",
+      "note" : "The motivating case. Done one call at a time this is 31 hand-backs; done right it is two calls, and the loop budget never comes near its limit.",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Toggle the light on and off then pause. Do this 10 times and then call 6316452763"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "contains" : {
+                "_0" : "toggle_flashlight"
+              }
+            },
+            "times" : {
+              "number" : {
+                "_0" : 5,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        }
+      ],
+      "id" : "workflow-blink-five",
+      "note" : "Spelled-out count: the number has to survive word-to-digit conversion.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn the flashlight on and off 5 times"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "contains" : {
+                "_0" : "wait"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        }
+      ],
+      "id" : "workflow-pause-between-actions",
+      "note" : "Sequenced, not repeated. Scored on the workflow tool because the pause is the point; a model that instead chains toggle → wait → toggle is doing something defensible, and this case failing that way is worth reading as a tie, not a bug.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn the flashlight on, wait three seconds, then turn it off"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "state" : {
+              "caseInsensitive" : {
+                "_0" : "on"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "toggle_flashlight"
+        }
+      ],
+      "id" : "workflow-single-action-no-repeat",
+      "note" : "The guard for this class. Adding a loop primitive gives every model a new way to over-engineer one switch; this is the case that catches it.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn on the flashlight"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 10,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "workflow-timer-not-repeat",
+      "note" : "A \"10\" next to a duration, deliberately close to the phrasing of the repeat cases. Catches a model that has learned \"10 ⇒ repeat_steps\".",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for 10 minutes"
     }
   ],
   "referenceNow" : "Wednesday 2026-08-19 14:30, America/New_York",

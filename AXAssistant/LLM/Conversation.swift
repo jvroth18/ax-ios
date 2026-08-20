@@ -49,6 +49,16 @@ final class Conversation {
     private func performTurn(_ text: String, modelManager: ModelManager, appState: AppState) async {
         messages.append(DisplayMessage(role: .user, text: text))
 
+        // Greetings are not authorization to touch Contacts, Messages, or any other
+        // tool. Handle this tiny, unambiguous class before exposing a small model to the
+        // tool catalog; action-bearing greetings still go through the normal agent loop.
+        if let reply = RequestPolicy.directReply(for: text) {
+            messages.append(DisplayMessage(role: .assistant, text: reply))
+            history.append(ChatMessage(role: .user, content: text))
+            history.append(ChatMessage(role: .assistant, content: reply))
+            return
+        }
+
         guard let container = modelManager.container else {
             messages.append(DisplayMessage(role: .assistant, text: "The model isn't loaded yet."))
             return
