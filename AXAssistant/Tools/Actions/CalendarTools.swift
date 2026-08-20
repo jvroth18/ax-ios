@@ -10,7 +10,10 @@ struct CalendarCreateTool: AXTool {
             type: .object,
             properties: [
                 "title": JSONSchema(type: .string),
-                "start": JSONSchema(type: .string, description: "Start, ISO 8601"),
+                "start": JSONSchema(
+                    type: .string,
+                    description: "Start in the user's local time, ISO 8601 without a timezone, e.g. 2026-08-17T17:00:00"
+                ),
                 "duration_minutes": JSONSchema(type: .integer, description: "Defaults to 60"),
                 "location": JSONSchema(type: .string),
             ],

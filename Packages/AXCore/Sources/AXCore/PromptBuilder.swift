@@ -15,7 +15,11 @@ public enum PromptBuilder {
         }
     }
 
-    public static func systemPrompt(tools: [ToolSpec], context: Context) -> String {
+    public static func systemPrompt(
+        tools: [ToolSpec],
+        context: Context,
+        profile: PromptProfile = .standard
+    ) -> String {
         var lines: [String] = []
         lines.append("""
         You are AX, a voice assistant that runs entirely on the user's iPhone. \
@@ -45,22 +49,59 @@ public enum PromptBuilder {
         <tool_call>
         {"name": <function-name>, "arguments": <args-json-object>}
         </tool_call>
+        """)
 
-        Example — the user says "Turn off the flashlight" and you reply with exactly:
-        <tool_call>
-        {"name": "toggle_flashlight", "arguments": {"state": "off"}}
-        </tool_call>
+        if profile.includeWorkedExample {
+            lines.append("""
+            Example — the user says "Turn off the flashlight" and you reply with exactly:
+            <tool_call>
+            {"name": "toggle_flashlight", "arguments": {"state": "off"}}
+            </tool_call>
+            """)
+        }
 
+        if profile.includeWorkflowGuidance {
+            var workflow = """
+            # Repetition
+
+            When a request repeats an action ("ten times", "back and forth", "with a pause \
+            between"), do NOT emit the same call over and over — call repeat_steps once and \
+            let it run the whole sequence. Use wait for a pause between actions.
+            """
+            if profile.includeWorkflowExample {
+                workflow += """
+
+
+                Example — "flash the light on and off ten times, pausing in between":
+                <tool_call>
+                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, wait:0.5, toggle_flashlight:off, wait:0.5", "times": 10}}
+                </tool_call>
+
+                Anything the workflow can't cover — an action needing confirmation, or one \
+                with more than one argument — you call directly, in a later step.
+                """
+            }
+            lines.append(workflow)
+        }
+
+        lines.append("""
         Rules:
-        - When a tool fits, ALWAYS reply with a <tool_call> block as in the example — \
+        - When a tool fits, ALWAYS reply with a <tool_call> block as shown — \
         never with an empty message, and never with the tool name outside the JSON.
-        - Use absolute ISO 8601 date-times (resolve "tomorrow at 9" using the current date above).
+        - Write every date-time as absolute local ISO 8601 with NO timezone suffix: \
+        "YYYY-MM-DDTHH:MM:SS" (e.g. 2026-08-17T17:00:00), meaning the user's own clock. \
+        Resolve "tomorrow at 9" against the current date above; use "YYYY-MM-DD" on its \
+        own when the user gave a day but no time. Never write a relative phrase as an argument.
         - "Remind me…" requests are create_reminder, never set_timer — timers are only for \
         counting down a duration ("set a timer for 10 minutes").
         - If the request is ambiguous, ask a short clarifying question instead of guessing.
         - If no tool fits, answer briefly in plain language. Keep spoken-style answers to one or two sentences.
         - Never invent tool names or shortcut names that are not listed.
         """)
+
+        if !profile.extraRules.isEmpty {
+            lines.append(profile.extraRules.map { "- \($0)" }.joined(separator: "\n"))
+        }
 
         return lines.joined(separator: "\n\n")
     }

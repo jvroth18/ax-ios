@@ -140,6 +140,7 @@ struct ChatView: View {
     private var statusText: String {
         switch appState.mode {
         case .idle: return conversation.messages.isEmpty ? "Ready" : "Done"
+        case .preparing: return "Waking up…"
         case .listening: return "Listening…"
         case .thinking: return "Working…"
         case .awaitingConfirmation: return "Waiting for you…"

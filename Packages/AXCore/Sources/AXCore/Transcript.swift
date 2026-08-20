@@ -16,8 +16,9 @@ public struct ChatMessage: Codable, Equatable, Sendable {
 
 /// Tunables for the agent loop, shared between the app and tests.
 public struct AgentConfig: Sendable {
-    /// Maximum generate→execute-tool→feed-back cycles before the loop gives up and
-    /// asks the model for a plain-text answer.
+    /// Maximum generate→execute-tool→feed-back cycles before the loop stops handing
+    /// control back to the model. A tool call on the last cycle still runs; its result
+    /// text becomes the reply, since there is no generation left to phrase one.
     public var maxToolIterations: Int
     public var maxContextTokens: Int
 

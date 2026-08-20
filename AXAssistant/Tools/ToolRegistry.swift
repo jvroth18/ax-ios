@@ -28,6 +28,8 @@ struct ToolRegistry: Sendable {
             FlashlightTool(),
             MusicTool(),
             ShortcutTool(),
+            WaitTool(),
+            RepeatStepsTool(),
         ]
         if !AppState.shared.settings.endpointConnectors.isEmpty {
             tools.append(HTTPRequestTool())

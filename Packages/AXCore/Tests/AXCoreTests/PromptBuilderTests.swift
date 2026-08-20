@@ -57,4 +57,17 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertEqual(decoded["success"]?.boolValue, true)
         XCTAssertEqual(decoded["content"]?.stringValue, "Reminder created")
     }
+
+    /// The prompt and the parser must agree on one format. They drifted apart once —
+    /// the prompt taught a zone-less date-time and create_reminder rejected it.
+    func testDateRuleTeachesAFormatTheParserAccepts() {
+        let prompt = PromptBuilder.systemPrompt(
+            tools: [tool],
+            context: .init(currentDateTime: "Monday 2026-08-17 14:00, America/New_York")
+        )
+        XCTAssertTrue(prompt.contains("YYYY-MM-DDTHH:MM:SS"))
+        XCTAssertTrue(prompt.contains("2026-08-17T17:00:00"))
+        XCTAssertNotNil(DateArgument.parse("2026-08-17T17:00:00"))
+        XCTAssertNotNil(DateArgument.parse("2026-08-17"))
+    }
 }

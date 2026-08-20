@@ -37,6 +37,9 @@ struct RootView: View {
     @State private var openWindows: [AppWindow] = [.chat]
     @State private var active: AppWindow? = .chat
     @State private var iconPositions: [String: CGPoint] = RootView.loadIconPositions()
+    /// The in-flight wait for a model to become ready before an Action Button request
+    /// can be honored. Cancelled when the app backgrounds; the request itself survives.
+    @State private var pendingListenTask: Task<Void, Never>?
     @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
@@ -63,10 +66,20 @@ struct RootView: View {
             OnboardingView(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 }))
         }
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active, appState.pendingListen else { return }
-            appState.pendingListen = false
-            open(.chat)
-            startListening()
+            switch phase {
+            case .active:
+                guard appState.pendingListen else { return }
+                open(.chat)
+                servicePendingListen()
+            case .background:
+                // Stop waiting, but keep the request: recording into a pocket is worse
+                // than picking it up again the next time the app comes forward.
+                pendingListenTask?.cancel()
+                pendingListenTask = nil
+                if appState.mode == .preparing { appState.mode = .idle }
+            default:
+                break
+            }
         }
     }
 
@@ -99,6 +112,9 @@ struct RootView: View {
             ) {
                 VStack(spacing: 0) {
                     menuBar
+                    if let status = actionButtonStatus {
+                        actionButtonBanner(status)
+                    }
                     ZStack(alignment: .top) {
                         Group {
                             switch modelManager.state {
@@ -322,6 +338,89 @@ struct RootView: View {
         ModelCatalog.all.filter(modelManager.isDownloaded)
     }
 
+    // MARK: - Action Button
+
+    /// Honors a held Action Button request as soon as the model can service it.
+    ///
+    /// The intent foregrounds the app, so the scene turns active while the launch load is
+    /// still running (~1.3 s for the 1.7B, longer for a 4B). Consuming `pendingListen`
+    /// there and then testing readiness — which is what this used to do — threw the
+    /// user's press away in silence on every cold start, the app's headline interaction.
+    /// So: show that we heard them, wait for the model, and only then consume the request.
+    /// If readiness is never coming, say why rather than leaving them staring at nothing.
+    private func servicePendingListen() {
+        pendingListenTask?.cancel()
+        pendingListenTask = Task { @MainActor in
+            appState.actionButtonNotice = nil
+            appState.mode = .preparing
+            let ready = await modelManager.waitUntilReady()
+            // Cancelled means the app backgrounded: leave `pendingListen` set so the next
+            // foreground picks the request up again.
+            guard !Task.isCancelled else { return }
+            pendingListenTask = nil
+            appState.pendingListen = false
+            guard ready else {
+                appState.mode = .idle
+                appState.actionButtonNotice = unavailableNotice()
+                return
+            }
+            startListening()
+        }
+    }
+
+    /// Why the held request couldn't be serviced, in the user's terms and with the next
+    /// step. ModelDownloadView is on screen underneath in every one of these cases.
+    private func unavailableNotice() -> String {
+        let name = modelManager.choice.name
+        switch modelManager.state {
+        case .failed(let message):
+            return "Couldn't load \(name) — \(message). Tap Retry below, then press the Action Button again."
+        case .ready:
+            return "Couldn't start listening. Press the Action Button again."
+        default:
+            return modelManager.isDownloaded(modelManager.choice)
+                ? "Stopped loading \(name) before it was ready. Start it below, then press the Action Button again."
+                : "AX needs to download \(name) (\(modelManager.choice.sizeLabel)) before it can listen."
+        }
+    }
+
+    /// One line telling the user what their Action Button press is doing. Only ever nil
+    /// when there is genuinely nothing to report.
+    private var actionButtonStatus: (text: String, isError: Bool)? {
+        if let notice = appState.actionButtonNotice { return (notice, true) }
+        if appState.mode == .preparing {
+            return ("Heard you — waking \(modelManager.choice.name) up, then I'll listen…", false)
+        }
+        return nil
+    }
+
+    private func actionButtonBanner(_ status: (text: String, isError: Bool)) -> some View {
+        HStack(alignment: .top, spacing: 6) {
+            if status.isError {
+                Text("✗").font(W95.ui(13, bold: true)).foregroundStyle(.red)
+            } else {
+                W95Hourglass()
+            }
+            Text(status.text)
+                .font(W95.ui(12))
+                .foregroundStyle(W95.text)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            if status.isError {
+                Button("OK") { appState.actionButtonNotice = nil }
+                    .buttonStyle(W95ButtonStyle())
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+        .background(W95.face)
+        .overlay(W95BevelOverlay())
+        .padding(.horizontal, 2)
+        .padding(.bottom, 2)
+    }
+
+    /// Only called once `waitUntilReady()` has confirmed a resident model. The guard is a
+    /// backstop now, not the readiness test that used to swallow Action Button presses.
     private func startListening() {
         guard case .ready = modelManager.state else { return }
         session?.cancel()

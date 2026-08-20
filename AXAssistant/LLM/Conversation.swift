@@ -51,7 +51,8 @@ final class Conversation {
                     container: container,
                     registry: .standard,
                     confirmer: self,
-                    config: AgentConfig(maxToolIterations: appState.settings.maxToolIterations)
+                    config: AgentConfig(maxToolIterations: appState.settings.maxToolIterations),
+                    profile: PromptProfile.forModel(modelManager.choice.id)
                 )
                 turn = try await loop.run(history: history, userText: text) { partial in
                     Task { @MainActor [weak self] in self?.thinkingPartial = partial }

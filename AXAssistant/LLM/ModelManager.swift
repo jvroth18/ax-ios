@@ -164,9 +164,49 @@ final class ModelManager {
 
     /// Loads silently at launch if weights are already on disk; otherwise stays idle so
     /// ModelDownloadView can show the explicit download step (with size + Wi-Fi warning).
+    ///
+    /// Re-entrant: on a cold start RootView's launch task and the held Action Button
+    /// request both want the model up, and two concurrent loads would put two copies of
+    /// multi-GB weights in memory on a device that can barely hold one. A second caller
+    /// joins the load already running instead of starting its own.
     func loadIfDownloaded() async {
+        if let loadTask { return await loadTask.value }
         guard container == nil, isDownloaded(choice) else { return }
-        await load()
+        let task = Task { await load() }
+        loadTask = task
+        await task.value
+        if loadTask == task { loadTask = nil }
+    }
+
+    /// Blocks until the model is resident, and reports whether it got there.
+    ///
+    /// The Action Button path needs this: the intent foregrounds the app and the scene
+    /// turns active a second or more (1.7B; longer for a 4B) before the launch load
+    /// finishes, so asking "is it ready?" once always answers no. Returns false — never
+    /// hangs — when readiness isn't coming: no weights on disk, a failed load, or one the
+    /// user cancelled. Honors cancellation of the calling task.
+    func waitUntilReady() async -> Bool {
+        while !Task.isCancelled {
+            switch state {
+            case .ready:
+                return container != nil
+            case .downloading, .loading:
+                // In flight; ModelDownloadView is already showing the progress. Polling
+                // beats withObservationTracking here — that fires once per change and
+                // would need re-arming around every branch below.
+                try? await Task.sleep(for: .milliseconds(100))
+            case .failed:
+                return false
+            case .idle:
+                // Either nothing has started yet (the launch task and the scene-phase
+                // change race on a cold start) or there is nothing to start.
+                guard isDownloaded(choice) else { return false }
+                await loadIfDownloaded()
+                if case .ready = state { return container != nil }
+                return false  // ran and didn't stick: cancelled or failed
+            }
+        }
+        return false
     }
 
     func downloadAndLoad() async {
@@ -174,6 +214,9 @@ final class ModelManager {
         let task = Task { await load() }
         loadTask = task
         await task.value
+        // Don't park a finished task in loadTask: cancelDownload() would then "cancel" a
+        // corpse, and loadIfDownloaded() would join it instead of loading.
+        if loadTask == task { loadTask = nil }
     }
 
     /// Abandon an in-flight download and return to the clean idle state.
@@ -246,6 +289,13 @@ final class ModelManager {
     /// Called on memory warnings and before AXDriver loads its vision model.
     func unload() {
         container = nil
+        // Abandon any in-flight load: unloading exists to free memory (AXDriver does it
+        // before pulling in a vision model), and a load left running would re-populate
+        // the container we just shed. Clearing it also stops loadIfDownloaded() from
+        // joining a finished task and skipping the reload. Cancelling a finished task
+        // is a no-op.
+        loadTask?.cancel()
+        loadTask = nil
         MLX.GPU.clearCache()
         state = .idle
     }
@@ -256,9 +306,9 @@ final class ModelManager {
         if model == choice, case .ready = state { return }
         unload()
         choice = model
-        if isDownloaded(model) {
-            await load()
-        }
+        // Through the tracked path so a concurrent loadIfDownloaded() joins this load
+        // rather than starting a second one.
+        await loadIfDownloaded()
     }
 
     /// Deletes one model's weights. If it's the loaded one, ejects it first.
