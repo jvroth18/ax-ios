@@ -35,7 +35,18 @@ struct AppToolValidator: ToolExecutionValidating {
 
     func covers(tool: String) -> Bool { Self.covered.contains(tool) }
 
-    func rejectionReason(for call: ToolCall) -> String? {
+    /// Applies the same repair production does, using the live spec when there is one.
+    private static func repaired(_ call: ToolCall) -> ToolCall {
+        let registry = MainActor.assumeIsolated { ToolRegistry.standard }
+        guard let spec = registry.tool(named: call.name)?.spec else { return call }
+        return ToolArgumentRepair.repair(call, spec: spec).call
+    }
+
+    func rejectionReason(for rawCall: ToolCall) -> String? {
+        // Production repairs arguments before executing, so scoring the unrepaired call
+        // would fail cases that work on device — the eval would be measuring a code path
+        // that no longer exists.
+        let call = Self.repaired(rawCall)
         switch call.name {
         case "create_reminder":
             guard let title = call.string("title"), !title.isEmpty else {

@@ -183,10 +183,14 @@ struct AgentLoop {
         return result
     }
 
-    private func execute(_ call: ToolCall) async -> ToolResult {
-        guard let tool = registry.tool(named: call.name) else {
-            return .failure("Unknown tool \(call.name)")
+    private func execute(_ rawCall: ToolCall) async -> ToolResult {
+        guard let tool = registry.tool(named: rawCall.name) else {
+            return .failure("Unknown tool \(rawCall.name)")
         }
+        // Fix mechanically-wrong arguments ("10" for a number, "ON" for an enum) before
+        // the tool sees them. Costs nothing; the alternative is two more generations to
+        // tell the model to retry something it will often mistype the same way again.
+        let call = ToolArgumentRepair.repair(rawCall, spec: tool.spec).call
         if tool.spec.risk == .confirm {
             let approved = await confirmer.confirm(call: call, spec: tool.spec)
             guard approved else { return .failure("The user declined this action.") }
