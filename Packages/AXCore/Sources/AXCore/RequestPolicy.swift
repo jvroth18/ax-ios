@@ -16,4 +16,19 @@ public enum RequestPolicy {
         guard greetings.contains(normalized) else { return nil }
         return "Hi! What can I help you with?"
     }
+
+    /// Models may propose tools; only the user's words authorize consequential intent.
+    /// This is intentionally stricter for communication tools because an accidental
+    /// draft is confusing even though iOS still requires the user to tap Send.
+    public static func allows(tool name: String, for request: String) -> Bool {
+        let words = Set(request.lowercased().split { !$0.isLetter }.map(String.init))
+        switch name {
+        case "compose_message":
+            return !words.isDisjoint(with: ["text", "message", "send", "tell", "write"])
+        case "call_number":
+            return !words.isDisjoint(with: ["call", "dial", "phone", "ring"])
+        default:
+            return true
+        }
+    }
 }

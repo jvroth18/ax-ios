@@ -12,4 +12,16 @@ final class RequestPolicyTests: XCTestCase {
         XCTAssertNil(RequestPolicy.directReply(for: "Hi, text Sam that I am late"))
         XCTAssertNil(RequestPolicy.directReply(for: "Hey, blink the flashlight five times"))
     }
+
+    func testMessageToolRequiresExplicitCommunicationIntent() {
+        XCTAssertFalse(RequestPolicy.allows(tool: "compose_message", for: "Hi"))
+        XCTAssertFalse(RequestPolicy.allows(tool: "compose_message", for: "What is the weather?"))
+        XCTAssertTrue(RequestPolicy.allows(tool: "compose_message", for: "Text Sam that I am late"))
+        XCTAssertTrue(RequestPolicy.allows(tool: "compose_message", for: "Send a message to Mom"))
+    }
+
+    func testCallToolRequiresExplicitCallIntent() {
+        XCTAssertFalse(RequestPolicy.allows(tool: "call_number", for: "Hi"))
+        XCTAssertTrue(RequestPolicy.allows(tool: "call_number", for: "Give Mom a ring"))
+    }
 }
