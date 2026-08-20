@@ -8,10 +8,18 @@ public enum PromptBuilder {
     public struct Context: Sendable {
         public let currentDateTime: String   // e.g. "Monday 2026-08-17 14:03, America/New_York"
         public let registeredShortcuts: [String]
+        /// Durable facts the user has told the assistant. Kept short deliberately: every
+        /// one of these is re-read on every generation.
+        public let memories: [String]
 
-        public init(currentDateTime: String, registeredShortcuts: [String] = []) {
+        public init(
+            currentDateTime: String,
+            registeredShortcuts: [String] = [],
+            memories: [String] = []
+        ) {
             self.currentDateTime = currentDateTime
             self.registeredShortcuts = registeredShortcuts
+            self.memories = memories
         }
     }
 
@@ -27,6 +35,13 @@ public enum PromptBuilder {
 
         Current date and time: \(context.currentDateTime)
         """)
+
+        if !context.memories.isEmpty {
+            lines.append("""
+            What you know about the user:
+            \(context.memories.map { "- \($0)" }.joined(separator: "\n"))
+            """)
+        }
 
         if !context.registeredShortcuts.isEmpty {
             lines.append("Shortcuts the user has registered for run_shortcut: " +

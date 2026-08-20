@@ -30,7 +30,7 @@ struct AppToolValidator: ToolExecutionValidating {
     private static let covered: Set<String> = [
         "create_reminder", "create_calendar_event", "read_next_events", "find_contact",
         "call_number", "compose_message", "open_app", "open_url", "set_timer",
-        "toggle_flashlight", "play_music", "run_shortcut", "wait", "repeat_steps",
+        "toggle_flashlight", "play_music", "run_shortcut", "wait", "repeat_steps", "remember",
     ]
 
     func covers(tool: String) -> Bool { Self.covered.contains(tool) }
@@ -118,6 +118,13 @@ struct AppToolValidator: ToolExecutionValidating {
             // way the user's request did not happen, which is what the eval cares about.
             return registeredShortcuts.contains(name)
                 ? nil : "\"\(name)\" is not a registered shortcut"
+
+        case "remember":
+            guard let fact = call.string("fact"),
+                  !fact.trimmingCharacters(in: .whitespaces).isEmpty else {
+                return "missing required argument fact"
+            }
+            return nil
 
         case "wait":
             // WaitTool clamps the value, so any positive number is accepted; only a

@@ -28,6 +28,7 @@ struct ToolRegistry: Sendable {
             FlashlightTool(),
             MusicTool(),
             ShortcutTool(),
+            RememberTool(),
             WaitTool(),
             RepeatStepsTool(),
         ]

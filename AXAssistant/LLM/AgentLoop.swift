@@ -38,7 +38,8 @@ struct AgentLoop {
     ) async throws -> Turn {
         let context = PromptBuilder.Context(
             currentDateTime: Self.formattedNow(),
-            registeredShortcuts: await MainActor.run { AppState.shared.settings.registeredShortcuts }
+            registeredShortcuts: await MainActor.run { AppState.shared.settings.registeredShortcuts },
+            memories: await MainActor.run { UserMemoryStore.shared.facts }
         )
         // The tool list is fixed for the whole turn: swapping schemas mid-chain would
         // invalidate what the model was told it could do partway through.

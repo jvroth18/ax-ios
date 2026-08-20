@@ -181,6 +181,25 @@ public enum EvalToolCatalog {
             risk: .confirm
         ),
         ToolSpec(
+            name: "remember",
+            description: """
+            Save a durable fact the user told you about themselves — a relationship ("mom is \
+            Sarah Chen"), a preference, or a routine. Use it only when the user states \
+            something worth knowing next week; never for the details of the current task.
+            """,
+            parameters: JSONSchema(
+                type: .object,
+                properties: [
+                    "fact": JSONSchema(
+                        type: .string,
+                        description: "One short sentence, written so it makes sense on its own"
+                    ),
+                ],
+                required: ["fact"]
+            ),
+            risk: .safe
+        ),
+        ToolSpec(
             name: "wait",
             description: "Pause for a number of seconds before the next action.",
             parameters: JSONSchema(

@@ -182,6 +182,7 @@ public struct ContractValidator: ToolExecutionValidating {
         // Partial: run_shortcut's real gate is the user's registered-shortcut list in
         // SettingsStore, which AXCore cannot see. Only the argument shape is checked here.
         ToolContract(tool: "run_shortcut", required: ["name"], arguments: ["name": .nonEmptyString]),
+        ToolContract(tool: "remember", required: ["fact"], arguments: ["fact": .nonEmptyString]),
         ToolContract(tool: "wait", required: ["seconds"], arguments: ["seconds": .positiveNumber]),
         // Partial: only the step *syntax* is checked here. Whether each step names a real,
         // repeatable, single-argument tool needs the live registry, so `AppToolValidator`

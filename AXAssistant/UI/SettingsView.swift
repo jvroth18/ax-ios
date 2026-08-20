@@ -98,6 +98,30 @@ struct SettingsView: View {
                                     .foregroundStyle(W95.shadow)
                             }
 
+                            W95GroupBox(label: "What AX remembers about you") {
+                                if UserMemoryStore.shared.facts.isEmpty {
+                                    Text("(nothing yet — AX saves facts you tell it about yourself)")
+                                        .font(W95.ui(11))
+                                        .foregroundStyle(W95.shadow)
+                                } else {
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        ForEach(UserMemoryStore.shared.facts, id: \.self) { fact in
+                                            HStack(alignment: .top) {
+                                                Text(fact).font(W95.ui(12))
+                                                Spacer()
+                                                Button("✕") { UserMemoryStore.shared.forget(fact) }
+                                                    .buttonStyle(W95ButtonStyle())
+                                            }
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 3)
+                                        }
+                                    }
+                                    .w95Well(background: .white)
+                                    Button("Forget everything") { UserMemoryStore.shared.forgetAll() }
+                                        .buttonStyle(W95ButtonStyle())
+                                }
+                            }
+
                             W95GroupBox(label: "More") {
                                 link("Connectors") { ConnectorsView() }
                                 link("Interaction history") { HistoryView() }
