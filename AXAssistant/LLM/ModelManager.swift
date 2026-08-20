@@ -32,7 +32,7 @@ final class ModelManager {
     /// HubClient default, is purgeable) and they're visible in the Files app.
     /// Layout is HubCache's: <root>/models--<org>--<name>/{blobs,refs,snapshots}.
     /// Shared with KokoroSpeaker so voice weights get the same treatment.
-    static let hubRoot: URL = FileManager.default
+    nonisolated static let hubRoot: URL = FileManager.default
         .urls(for: .documentDirectory, in: .userDomainMask).first!
         .appendingPathComponent("huggingface/hub")
 
@@ -57,6 +57,7 @@ final class ModelManager {
     /// Why a library download failed, id → message. Never fail silently.
     private(set) var downloadErrors: [String: String] = [:]
     private var downloadTasks: [String: Task<Void, Never>] = [:]
+    private var storagePrepared = false
 
     /// Fetch a model's weights without unloading or switching the current model,
     /// so the Library can stock up while you keep chatting.
@@ -101,8 +102,6 @@ final class ModelManager {
     }
 
     private init() {
-        Self.migrateFromCachesIfNeeded()
-        Self.removeOrphanedModels()
         // iOS jetsam kills the app under memory pressure (looks like a crash);
         // shed the model first so the OS reclaims ~2 GB instead.
         NotificationCenter.default.addObserver(
@@ -111,6 +110,18 @@ final class ModelManager {
         ) { _ in
             MainActor.assumeIsolated { ModelManager.shared.handleMemoryWarning() }
         }
+    }
+
+    /// Disk migration and catalog cleanup used to run in `init`, blocking SwiftUI's
+    /// first frame while it walked gigabytes of model files. Run it after launch on a
+    /// background executor, once, before checking whether the selected model exists.
+    private func prepareStorageIfNeeded() async {
+        guard !storagePrepared else { return }
+        await Task.detached(priority: .utility) {
+            Self.migrateFromCachesIfNeeded()
+            Self.removeOrphanedModels()
+        }.value
+        storagePrepared = true
     }
 
     private func handleMemoryWarning() {
@@ -123,7 +134,7 @@ final class ModelManager {
     /// Weights for models no longer in the catalog are invisible to the Library and
     /// would squat on storage forever; delete them. (Every download comes from the
     /// catalog, so anything unmatched is a removed entry.)
-    private static func removeOrphanedModels() {
+    nonisolated private static func removeOrphanedModels() {
         // The voice stack (Kokoro + its G2P assets) shares this store but isn't a
         // catalog entry — never treat it as an orphan.
         var known = Set(ModelCatalog.all.map {
@@ -139,7 +150,7 @@ final class ModelManager {
 
     /// Earlier builds let HubClient default to Caches; move anything there into
     /// Documents so users don't re-download (or silently lose) models.
-    private static func migrateFromCachesIfNeeded() {
+    nonisolated private static func migrateFromCachesIfNeeded() {
         let oldRoot = FileManager.default
             .urls(for: .cachesDirectory, in: .userDomainMask).first!
             .appendingPathComponent("huggingface/hub")
@@ -170,6 +181,7 @@ final class ModelManager {
     /// multi-GB weights in memory on a device that can barely hold one. A second caller
     /// joins the load already running instead of starting its own.
     func loadIfDownloaded() async {
+        await prepareStorageIfNeeded()
         if let loadTask { return await loadTask.value }
         guard container == nil, isDownloaded(choice) else { return }
         let task = Task { await load() }

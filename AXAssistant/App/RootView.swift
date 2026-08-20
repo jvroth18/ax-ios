@@ -52,6 +52,8 @@ struct RootView: View {
         .preferredColorScheme(.light)
         .task {
             MetricsStore.shared.startSampling()
+            // Let SwiftUI commit the first frame before model disk maintenance/loading.
+            await Task.yield()
             await modelManager.loadIfDownloaded()
         }
         .sheet(isPresented: Binding(get: { !hasOnboarded }, set: { hasOnboarded = !$0 })) {
