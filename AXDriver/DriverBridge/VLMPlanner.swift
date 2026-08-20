@@ -83,8 +83,8 @@ struct VLMPlanner {
         // type checker can fail to produce a diagnostic for the nested generic call.
         let data = Data(json.utf8)
         let decoder = JSONDecoder()
-        let decoded: [String: JSONValue] = try decoder.decode(
-            [String: JSONValue].self,
+        let decoded: [String: AXCore.JSONValue] = try decoder.decode(
+            [String: AXCore.JSONValue].self,
             from: data
         )
         switch decoded["action"]?.stringValue {
