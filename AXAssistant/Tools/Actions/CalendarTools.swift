@@ -45,6 +45,8 @@ struct CalendarCreateTool: AXTool {
 }
 
 struct CalendarReadTool: AXTool {
+    let isReadOnly = true
+
     let spec = ToolSpec(
         name: "read_next_events",
         description: "Read the user's upcoming calendar events.",

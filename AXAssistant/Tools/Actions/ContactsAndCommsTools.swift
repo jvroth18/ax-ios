@@ -4,6 +4,8 @@ import UIKit
 import AXCore
 
 struct ContactsTool: AXTool {
+    let isReadOnly = true
+
     let spec = ToolSpec(
         name: "find_contact",
         description: "Look up a contact's phone number by name.",

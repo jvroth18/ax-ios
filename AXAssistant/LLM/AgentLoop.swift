@@ -48,6 +48,9 @@ struct AgentLoop {
 
         var allCalls: [ToolCall] = []
         var allResults: [ToolResult] = []
+        // Read-only results are reused within a turn: a chain that looks up the same
+        // contact twice should cost one lookup, not two.
+        let cache = ToolResultCache()
 
         for iteration in 0...config.maxToolIterations {
             // Stop between iterations too: cancelling during a chain should end the turn,
@@ -94,8 +97,8 @@ struct AgentLoop {
             let resultsBefore = allResults.count
 
             messages.append(.init(role: .assistant, content: completion))
-            for call in parsed.toolCalls {
-                let result = await execute(call)
+            let results = await executeAll(parsed.toolCalls, cache: cache)
+            for (call, result) in zip(parsed.toolCalls, results) {
                 allCalls.append(call)
                 allResults.append(result)
                 // Turn-ending tools (e.g. summarize_app, which swaps models in memory)
@@ -140,6 +143,44 @@ struct AgentLoop {
             return "That needed more steps than I'm allowed to take in one go — try asking for one thing at a time."
         }
         return contents.joined(separator: " ")
+    }
+
+    /// Runs a turn's calls, concurrently when every one of them is read-only.
+    ///
+    /// The all-or-nothing rule is deliberate. Mixed batches are run in order because the
+    /// model's sequence is the only ordering information there is, and executing
+    /// "flashlight on" alongside "flashlight off" is not a speedup — it's a coin flip.
+    /// `.confirm` tools are inherently serial anyway: two confirmation sheets cannot be
+    /// on screen at once.
+    private func executeAll(_ calls: [ToolCall], cache: ToolResultCache) async -> [ToolResult] {
+        let allReadOnly = calls.allSatisfy { registry.tool(named: $0.name)?.isReadOnly == true }
+        guard calls.count > 1, allReadOnly else {
+            var results: [ToolResult] = []
+            for call in calls { results.append(await execute(call, cache: cache)) }
+            return results
+        }
+        return await withTaskGroup(of: (Int, ToolResult).self) { group in
+            for (index, call) in calls.enumerated() {
+                group.addTask { (index, await execute(call, cache: cache)) }
+            }
+            var byIndex: [Int: ToolResult] = [:]
+            for await (index, result) in group { byIndex[index] = result }
+            return calls.indices.map { byIndex[$0] ?? .failure("Tool did not run") }
+        }
+    }
+
+    private func execute(_ call: ToolCall, cache: ToolResultCache) async -> ToolResult {
+        guard let tool = registry.tool(named: call.name) else {
+            return .failure("Unknown tool \(call.name)")
+        }
+        if tool.isReadOnly, let cached = await cache.value(for: call) {
+            return cached
+        }
+        let result = await execute(call)
+        if tool.isReadOnly, result.success {
+            await cache.store(result, for: call)
+        }
+        return result
     }
 
     private func execute(_ call: ToolCall) async -> ToolResult {
