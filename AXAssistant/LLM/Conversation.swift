@@ -26,10 +26,27 @@ final class Conversation {
     /// Model-facing history: final user/assistant turns only (tool internals stay out
     /// to preserve the 4k context budget). Trimmed to the most recent exchanges.
     private var history: [ChatMessage] = []
+    /// The in-flight turn, so the user can stop a long tool workflow mid-run.
+    private var turnTask: Task<Void, Never>?
     private static let maxHistoryMessages = 12
 
 
+    /// Abandons the running turn. Tools that check `Task.isCancelled` (notably
+    /// `repeat_steps`) stop at their next step boundary rather than at the end.
+    func cancelTurn() {
+        turnTask?.cancel()
+        turnTask = nil
+    }
+
     func send(_ text: String, modelManager: ModelManager, appState: AppState) async {
+        turnTask?.cancel()
+        let task = Task { await performTurn(text, modelManager: modelManager, appState: appState) }
+        turnTask = task
+        await task.value
+        turnTask = nil
+    }
+
+    private func performTurn(_ text: String, modelManager: ModelManager, appState: AppState) async {
         messages.append(DisplayMessage(role: .user, text: text))
 
         guard let container = modelManager.container else {

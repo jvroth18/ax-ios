@@ -120,6 +120,12 @@ struct RepeatStepsTool: AXTool {
         var completed = 0
         for _ in 0..<times {
             for entry in plan {
+                // A ten-minute blink the user cannot stop is a bug, not a feature: the
+                // turn's Task is cancelled by the Stop button, and a workflow is the one
+                // tool long enough for that to matter mid-run.
+                if Task.isCancelled {
+                    return .ok("Stopped after \(completed) actions.")
+                }
                 do {
                     let result = try await entry.tool.run(entry.call)
                     guard result.success else {

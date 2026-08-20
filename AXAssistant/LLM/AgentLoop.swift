@@ -50,6 +50,11 @@ struct AgentLoop {
         var allResults: [ToolResult] = []
 
         for iteration in 0...config.maxToolIterations {
+            // Stop between iterations too: cancelling during a chain should end the turn,
+            // not silently start another generation.
+            if Task.isCancelled {
+                return Turn(reply: "Stopped.", toolCalls: allCalls, toolResults: allResults)
+            }
             let completion = try await generate(messages: messages, onPartial: onPartial)
 
             let parsed: ParsedCompletion

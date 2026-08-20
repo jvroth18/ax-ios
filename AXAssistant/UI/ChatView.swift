@@ -25,6 +25,8 @@ struct ChatView: View {
                         if let partial = conversation.thinkingPartial {
                             HStack(alignment: .top, spacing: 6) {
                                 W95Hourglass()
+                                Button("Stop") { conversation.cancelTurn() }
+                                    .buttonStyle(W95ButtonStyle())
                                 Text(partial.isEmpty ? "AX is thinking…" : partial)
                                     .font(W95.ui(13))
                                     .foregroundStyle(W95.shadow)
