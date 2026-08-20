@@ -47,10 +47,13 @@ struct WaitTool: AXTool {
 /// nested JSON for two reasons: `JSONSchema` deliberately cannot express arrays of
 /// objects, and small models emit flat strings far more reliably than nested structures.
 struct RepeatStepsTool: AXTool {
-    static let maxTimes = 50
-    static let maxTotalSteps = 200
-    /// Total sleeping time allowed in one call, so a workflow can't wedge the app.
-    static let maxTotalWaitSeconds: Double = 120
+    /// Primitive tools are injected so the same executor can run against recording
+    /// stubs in the harness. Production passes the standard registry's primitives.
+    let primitiveTools: [any AXTool]
+
+    init(primitiveTools: [any AXTool]) {
+        self.primitiveTools = primitiveTools
+    }
 
     let spec = ToolSpec(
         name: "repeat_steps",
@@ -72,7 +75,7 @@ struct RepeatStepsTool: AXTool {
                 ),
                 "times": JSONSchema(
                     type: .integer,
-                    description: "How many times to repeat the whole sequence (default 1, max 50)"
+                    description: "How many times to repeat the whole sequence (default 1, 1 to 50)"
                 ),
             ],
             required: ["steps"]
@@ -84,61 +87,46 @@ struct RepeatStepsTool: AXTool {
         guard let raw = call.string("steps"), !raw.trimmingCharacters(in: .whitespaces).isEmpty else {
             throw AXToolError.missingArgument("steps")
         }
-        let steps = WorkflowStep.parse(raw)
-        guard !steps.isEmpty else {
-            throw AXToolError.badArgument("steps", "could not read any \"tool:value\" steps")
-        }
-        let times = min(max(call.int("times") ?? 1, 1), Self.maxTimes)
-        guard steps.count * times <= Self.maxTotalSteps else {
-            return .failure("That's \(steps.count * times) actions — too many for one go (limit \(Self.maxTotalSteps)).")
-        }
-
-        // Resolve against the live registry, minus this tool (no recursion).
-        let registry = await MainActor.run { ToolRegistry.standard }
-        var plan: [(tool: any AXTool, call: ToolCall)] = []
-        var totalWait: Double = 0
-        for step in steps {
-            guard step.tool != spec.name else {
-                return .failure("A workflow can't contain another workflow — put the steps in this one.")
-            }
-            guard let tool = registry.tool(named: step.tool) else {
-                return .failure("I don't have a tool called \"\(step.tool)\".")
-            }
-            guard tool.spec.risk != .confirm else {
-                return .failure("\"\(step.tool)\" needs confirmation each time, so it can't run inside a repeat. Ask for it directly.")
-            }
-            let arguments = try step.arguments(for: tool.spec)
-            if tool.spec.name == "wait", let seconds = arguments["seconds"]?.numberValue {
-                totalWait += seconds * Double(times)
-            }
-            plan.append((tool, ToolCall(name: tool.spec.name, arguments: arguments)))
-        }
-        guard totalWait <= Self.maxTotalWaitSeconds else {
-            return .failure("That would spend \(Int(totalWait))s waiting — keep a workflow under \(Int(Self.maxTotalWaitSeconds))s.")
+        let times = call.int("times") ?? 1
+        let plan: WorkflowPlan
+        do {
+            plan = try WorkflowPlan.compile(
+                steps: raw, times: times, tools: primitiveTools.map(\.spec)
+            )
+        } catch {
+            return .failure(String(describing: error))
         }
 
         var completed = 0
-        for _ in 0..<times {
-            for entry in plan {
-                // A ten-minute blink the user cannot stop is a bug, not a feature: the
-                // turn's Task is cancelled by the Stop button, and a workflow is the one
-                // tool long enough for that to matter mid-run.
-                if Task.isCancelled {
-                    return .ok("Stopped after \(completed) actions.")
+        let registry = ToolRegistry(tools: primitiveTools)
+        for plannedCall in plan.calls {
+            // A ten-minute blink the user cannot stop is a bug, not a feature: the
+            // turn's Task is cancelled by the Stop button, and a workflow is the one
+            // tool long enough for that to matter mid-run.
+            if Task.isCancelled {
+                return .ok("Stopped after \(completed) actions.")
+            }
+            guard let tool = registry.tool(named: plannedCall.name) else {
+                return .failure("Stopped after \(completed) actions: tool disappeared.")
+            }
+            do {
+                let result = try await tool.run(plannedCall)
+                guard result.success else {
+                    return .failure("Stopped after \(completed) actions: \(result.content)")
                 }
-                do {
-                    let result = try await entry.tool.run(entry.call)
-                    guard result.success else {
-                        return .failure("Stopped after \(completed) actions: \(result.content)")
-                    }
-                    completed += 1
-                } catch {
-                    return .failure("Stopped after \(completed) actions: \(error.localizedDescription)")
-                }
+                completed += 1
+            } catch {
+                return .failure("Stopped after \(completed) actions: \(error.localizedDescription)")
             }
         }
 
-        return .ok("Ran \(describe(steps)) \(times == 1 ? "once" : "\(times) times") — \(completed) actions.")
+        return .ok(
+            "Ran the repeated sequence successfully: "
+                + "\(describe(WorkflowStep.parse(raw))) "
+                + "\(times == 1 ? "once" : "\(times) times") — \(completed) actions. "
+                + "Continue with every remaining action in the original request; "
+                + "do not give a final answer until all requested actions have a tool result."
+        )
     }
 
     private func describe(_ steps: [WorkflowStep]) -> String {

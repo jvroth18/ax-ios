@@ -142,6 +142,14 @@ final class EvalJudgeTests: XCTestCase {
         XCTAssertEqual(judged.outcome, .pass)
     }
 
+    func testNegativeCaseRejectsSilence() throws {
+        let evalCase = try XCTUnwrap(EvalSuite.all.first { $0.id == "negative-joke" })
+        XCTAssertEqual(
+            EvalJudge.judge(evalCase, completion: "   ", tools: EvalToolCatalog.specs).outcome,
+            .emptyReply
+        )
+    }
+
     func testNegativeCaseFailsOnAnyToolCall() throws {
         let evalCase = try XCTUnwrap(EvalSuite.all.first { $0.id == "negative-minutes-in-a-day" })
         let judged = EvalJudge.judge(

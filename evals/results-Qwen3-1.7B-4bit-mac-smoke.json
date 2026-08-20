@@ -1,0 +1,159 @@
+{
+  "model": "mlx-community/Qwen3-1.7B-4bit",
+  "modelRevision": "3b1b1768f8f8cf8351c712464f906e86c2b8269e",
+  "mlxLMVersion": "0.31.3",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "promptFile": "/tmp/ax-qwen-small-prompt.txt",
+  "promptSHA256": "ca716609f2b33d369980833157e021df59dbdce013b0e2f371a9e44a3da1a475",
+  "loadSeconds": 1.02,
+  "passed": true,
+  "runs": [
+    {
+      "seed": 1,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "\"Why do penguins never get along? They always want to be first in line.\""
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "The phone is a device that allows you to make and receive calls, send messages, and access the internet. It uses a cellular network to connect to the internet and communicate with other devices."
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "\"Why do penguins never get along? They always want to be first in line.\""
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "The phone is a device that allows you to make and receive calls, send messages, and access the internet. It uses a cellular network to connect to the internet and communicate with other devices."
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 3,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "\"Why do penguins never get along? They always want to be first in line.\""
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "The phone is a device that allows you to make and receive calls, send messages, and access the internet. It uses a cellular network to communicate with other phones and the internet."
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    }
+  ]
+}

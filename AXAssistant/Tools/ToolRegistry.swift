@@ -30,8 +30,10 @@ struct ToolRegistry: Sendable {
             ShortcutTool(),
             RememberTool(),
             WaitTool(),
-            RepeatStepsTool(),
         ]
+        // Inject primitives into the workflow executor. This keeps the production path
+        // simple while allowing evals to substitute recording tools and test expansion.
+        tools.append(RepeatStepsTool(primitiveTools: tools))
         if !AppState.shared.settings.endpointConnectors.isEmpty {
             tools.append(HTTPRequestTool())
         }

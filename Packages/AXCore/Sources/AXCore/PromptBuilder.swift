@@ -82,6 +82,13 @@ public enum PromptBuilder {
             When a request repeats an action ("ten times", "back and forth", "with a pause \
             between"), do NOT emit the same call over and over — call repeat_steps once and \
             let it run the whole sequence. Use wait for a pause between actions.
+
+            You may also use repeat_steps with times=1 for an ordered sequence of safe \
+            one-argument tools. Put each action in `steps` in the user's exact order.
+
+            A successful repeat_steps result means every inner step and repetition already \
+            finished. NEVER call an inner tool from that completed workflow again. If the \
+            original request said "and then" another action, call only that next action.
             """
             if profile.includeWorkflowExample {
                 workflow += """
@@ -97,7 +104,20 @@ public enum PromptBuilder {
 
                 Example — "Turn the flashlight on and off 5 times":
                 <tool_call>
-                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, toggle_flashlight:off", "times": 5}}
+                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25", "times": 5}}
+                </tool_call>
+
+                Example — "Blink the flashlight 10 times, then call 6316452763":
+                <tool_call>
+                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25", "times": 10}}
+                </tool_call>
+                <tool_call>
+                {"name": "call_number", "arguments": {"number": "6316452763"}}
+                </tool_call>
+
+                Example — "Turn on the flashlight, then pause the music, then set a timer for 2 minutes":
+                <tool_call>
+                {"name": "repeat_steps", "arguments": {"steps": "toggle_flashlight:on, play_music:pause, set_timer:2", "times": 1}}
                 </tool_call>
                 """
             }

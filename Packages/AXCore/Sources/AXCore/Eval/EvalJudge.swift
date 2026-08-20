@@ -9,13 +9,22 @@ public struct EvalJudgment: Sendable, Equatable, Codable {
     /// False when no validator could dry-run one of the emitted tools — i.e. the case
     /// passed but execution was never actually checked.
     public let executionCovered: Bool
+    /// Calls that recording tools actually received. For `repeat_steps`, this contains
+    /// the expanded primitive sequence rather than only the outer model-authored call.
+    public let executedCalls: [String]?
 
     public var passed: Bool { outcome.passed }
 
-    public init(outcome: EvalOutcome, emittedCalls: [String], executionCovered: Bool) {
+    public init(
+        outcome: EvalOutcome,
+        emittedCalls: [String],
+        executionCovered: Bool,
+        executedCalls: [String]? = nil
+    ) {
         self.outcome = outcome
         self.emittedCalls = emittedCalls
         self.executionCovered = executionCovered
+        self.executedCalls = executedCalls
     }
 }
 
@@ -72,6 +81,9 @@ public enum EvalJudge {
             if let first = calls.first { return finish(.unexpectedCall(first.name)) }
             if evalCase.requiresQuestion, !looksLikeAQuestion(replyText) {
                 return finish(.notAQuestion(replyText))
+            }
+            if replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return finish(.emptyReply)
             }
             return finish(.pass)
         }

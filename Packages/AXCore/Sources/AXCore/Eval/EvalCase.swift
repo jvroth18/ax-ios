@@ -119,8 +119,14 @@ public enum EvalOutcome: Sendable, Equatable, Codable {
     /// The tool accepted arguments a `reject` probe said it should refuse — the validator
     /// itself is wrong, which matters because the validator is what scores everyone else.
     case executionAcceptedUnexpectedly(tool: String)
+    /// The recording harness did not execute the deterministic calls compiled from the
+    /// model's workflow, in the same order. This distinguishes syntax acceptance from
+    /// proof that nested actions actually ran.
+    case executionTraceMismatch(expected: [String], got: [String])
     /// Ambiguity case answered with a statement instead of a question.
     case notAQuestion(String)
+    /// A no-tool case still needs a useful conversational answer. Silence is not restraint.
+    case emptyReply
     case parseError(String)
     case generationError(String)
 
@@ -137,7 +143,10 @@ public enum EvalOutcome: Sendable, Equatable, Codable {
         case .badArgument(let tool, let argument, let why): return "\(tool).\(argument): \(why)"
         case .executionRejected(let tool, let why): return "\(tool) would throw: \(why)"
         case .executionAcceptedUnexpectedly(let tool): return "\(tool) accepted args it should reject"
+        case .executionTraceMismatch(let expected, let got):
+            return "execution trace mismatch: expected \(expected.joined(separator: " → ")), got \(got.joined(separator: " → "))"
         case .notAQuestion(let text): return "didn't ask, asserted: \(text.prefix(100))"
+        case .emptyReply: return "returned no tool and no conversational reply"
         case .parseError(let why): return "parse: \(why)"
         case .generationError(let why): return "error: \(why)"
         }
@@ -154,7 +163,9 @@ public enum EvalOutcome: Sendable, Equatable, Codable {
         case .badArgument: return "badArgument"
         case .executionRejected: return "executionRejected"
         case .executionAcceptedUnexpectedly: return "executionAcceptedUnexpectedly"
+        case .executionTraceMismatch: return "executionTraceMismatch"
         case .notAQuestion: return "notAQuestion"
+        case .emptyReply: return "emptyReply"
         case .parseError: return "parseError"
         case .generationError: return "generationError"
         }

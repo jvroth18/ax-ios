@@ -21,12 +21,18 @@ public enum RequestPolicy {
     /// This is intentionally stricter for communication tools because an accidental
     /// draft is confusing even though iOS still requires the user to tap Send.
     public static func allows(tool name: String, for request: String) -> Bool {
-        let words = Set(request.lowercased().split { !$0.isLetter }.map(String.init))
+        let tokens = request.lowercased().split { !$0.isLetter }.map(String.init)
+        let words = Set(tokens)
         switch name {
         case "compose_message":
-            return !words.isDisjoint(with: ["text", "message", "send", "tell", "write"])
+            // "Tell me a joke" and "write me a poem" are conversation, not permission
+            // to open Messages. "Explain this error message" uses the same noun, so
+            // `message` only authorizes when it is clearly used as the request's verb.
+            if !words.isDisjoint(with: ["text", "send", "sms"]) { return true }
+            guard let index = tokens.firstIndex(of: "message") else { return false }
+            return index == 0 || ["please", "you"].contains(tokens[index - 1])
         case "call_number":
-            return !words.isDisjoint(with: ["call", "dial", "phone", "ring"])
+            return !words.isDisjoint(with: ["call", "dial", "ring"])
         default:
             return true
         }

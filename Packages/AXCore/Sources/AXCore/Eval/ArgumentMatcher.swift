@@ -23,6 +23,13 @@ public enum ArgumentMatcher: Sendable, Equatable, Codable {
     /// Phone numbers compared on digits only, last 10 digits when both are long enough,
     /// so "+1 (415) 555-0147" and "4155550147" agree.
     case digits(String)
+    /// A workflow's one-cycle step list, compared in exact order after parsing the
+    /// model-tolerant flat syntax. This catches `on` repeated ten times when the user
+    /// asked for `on → off` ten times.
+    case workflowCycle([WorkflowStep])
+    /// One of several exact ordered cycles. Used only when production intentionally
+    /// normalizes equivalent plans (for example, adding a perceptible flashlight dwell).
+    case workflowCycleAnyOf([[WorkflowStep]])
     /// The resolved-instant matcher. Any of the listed expectations within `tolerance`
     /// passes — a list because some phrasings ("next Monday") are genuinely bi-modal for
     /// humans too, and the eval should not punish the reading a person would also accept.
@@ -77,6 +84,37 @@ public enum ArgumentMatcher: Sendable, Equatable, Codable {
             let matches = actual == wanted
                 || (actual.count >= 10 && wanted.count >= 10 && actual.suffix(10) == wanted.suffix(10))
             return matches ? nil : "expected number \(expected), got \(Self.display(value))"
+        case .workflowCycle(let expected):
+            guard let raw = value.stringValue else {
+                return "expected a workflow step string, got \"\(Self.display(value))\""
+            }
+            let actual = WorkflowStep.parse(raw)
+            let normalize: (WorkflowStep) -> WorkflowStep = {
+                WorkflowStep(
+                    tool: $0.tool.lowercased(),
+                    value: $0.value?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                )
+            }
+            let normalizedActual = actual.map(normalize)
+            let normalizedExpected = expected.map(normalize)
+            return normalizedActual == normalizedExpected
+                ? nil
+                : "expected cycle \(Self.displayWorkflow(normalizedExpected)), got \(Self.displayWorkflow(normalizedActual))"
+        case .workflowCycleAnyOf(let alternatives):
+            guard let raw = value.stringValue else {
+                return "expected a workflow step string, got \"\(Self.display(value))\""
+            }
+            let normalize: (WorkflowStep) -> WorkflowStep = {
+                WorkflowStep(
+                    tool: $0.tool.lowercased(),
+                    value: $0.value?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                )
+            }
+            let actual = WorkflowStep.parse(raw).map(normalize)
+            let expected = alternatives.map { $0.map(normalize) }
+            return expected.contains(actual)
+                ? nil
+                : "expected one of \(expected.map(Self.displayWorkflow).joined(separator: " or ")), got \(Self.displayWorkflow(actual))"
         case .resolvedDateAnyOf(let expectations, let tolerance):
             let raw = Self.display(value)
             guard let emitted = EvalDateParser.parse(raw, timeZone: clock.timeZone) else {
@@ -126,5 +164,9 @@ public enum ArgumentMatcher: Sendable, Equatable, Codable {
         if magnitude < 5400 { return "\(Int((magnitude / 60).rounded()))min \(direction)" }
         if magnitude < 172_800 { return String(format: "%.1fh %@", magnitude / 3600, direction) }
         return String(format: "%.1f days %@", magnitude / 86_400, direction)
+    }
+
+    private static func displayWorkflow(_ steps: [WorkflowStep]) -> String {
+        steps.map { "\($0.tool):\($0.value ?? "")" }.joined(separator: " → ")
     }
 }

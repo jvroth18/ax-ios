@@ -11,6 +11,7 @@ public struct EvalCaseResult: Sendable, Codable, Identifiable {
     public let detail: String
     public let emittedCalls: [String]
     public let executionCovered: Bool
+    public let executedCalls: [String]?
     public let durationSeconds: Double?
 
     public init(evalCase: EvalCase, judgment: EvalJudgment, durationSeconds: Double? = nil) {
@@ -23,6 +24,7 @@ public struct EvalCaseResult: Sendable, Codable, Identifiable {
         self.detail = judgment.outcome.label
         self.emittedCalls = judgment.emittedCalls
         self.executionCovered = judgment.executionCovered
+        self.executedCalls = judgment.executedCalls
         self.durationSeconds = durationSeconds
     }
 }
@@ -62,11 +64,14 @@ public struct EvalRunMetrics: Sendable, Codable {
 /// now produces a file with the suite version, the pinned clock, the model, every case's
 /// outcome and the throughput/memory numbers — enough to re-derive the claim or refute it.
 public struct EvalReport: Sendable, Codable {
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     public let schemaVersion: Int
     public let generatedAt: Date
     public let modelID: String
+    /// Hugging Face snapshot commit from refs/main when available. The repository id
+    /// alone is not enough to reproduce a model run after upstream weights change.
+    public let modelRevision: String?
     public let suiteVersion: String
     public let referenceNow: String
     /// Which prompt variant produced this score. Without it, two runs of the same model
@@ -81,6 +86,7 @@ public struct EvalReport: Sendable, Codable {
 
     public init(
         modelID: String,
+        modelRevision: String? = nil,
         suiteVersion: String = EvalSuite.version,
         clock: EvalClock = .pinned,
         promptProfile: String = PromptProfile.standard.name,
@@ -92,6 +98,7 @@ public struct EvalReport: Sendable, Codable {
         self.schemaVersion = Self.currentSchemaVersion
         self.generatedAt = generatedAt
         self.modelID = modelID
+        self.modelRevision = modelRevision
         self.suiteVersion = suiteVersion
         self.referenceNow = clock.promptDateTime
         self.promptProfile = promptProfile
@@ -168,6 +175,7 @@ public struct EvalReport: Sendable, Codable {
         lines.append("")
         lines.append("- Suite `\(suiteVersion)` · schema v\(schemaVersion)")
         lines.append("- Run \(Self.timestamp(generatedAt))")
+        if let modelRevision { lines.append("- Model revision `\(modelRevision)`") }
         lines.append("- Reference \"now\" pinned to **\(referenceNow)**")
         lines.append("- Prompt profile: **\(promptProfile)**")
         lines.append("- **Overall: \(passed)/\(total)** (\(Self.percent(passed, total)))")
@@ -237,13 +245,16 @@ public struct EvalReport: Sendable, Codable {
         lines.append("")
         lines.append("## All cases")
         lines.append("")
-        lines.append("| Case | Class | Result | Emitted |")
-        lines.append("| --- | --- | --- | --- |")
+        lines.append("| Case | Class | Result | Emitted | Executed |")
+        lines.append("| --- | --- | --- | --- | --- |")
         for result in results {
             let mark = result.passed ? (result.executionCovered ? "pass" : "pass (unvalidated)") : "FAIL"
             let emitted = result.emittedCalls.isEmpty
                 ? "_(no call)_" : result.emittedCalls.map { "`\(Self.escape($0))`" }.joined(separator: "<br>")
-            lines.append("| `\(result.id)` | \(result.caseClass.rawValue) | \(mark) | \(emitted) |")
+            let executed = result.executedCalls?.isEmpty == false
+                ? result.executedCalls!.map { "`\(Self.escape($0))`" }.joined(separator: "<br>")
+                : "_(not recorded)_"
+            lines.append("| `\(result.id)` | \(result.caseClass.rawValue) | \(mark) | \(emitted) | \(executed) |")
         }
         return lines.joined(separator: "\n") + "\n"
     }

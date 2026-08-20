@@ -1,6 +1,25 @@
 import Foundation
 import AXCore
 
+/// Thread-safe because read-only batches may execute their stubs concurrently. Snapshot
+/// order is the order tools actually started, which is the behavior the harness audits.
+final class EvalExecutionTrace: @unchecked Sendable {
+    private let lock = NSLock()
+    private var calls: [ToolCall] = []
+
+    func record(_ call: ToolCall) {
+        lock.lock()
+        calls.append(call)
+        lock.unlock()
+    }
+
+    func snapshot() -> [ToolCall] {
+        lock.lock()
+        defer { lock.unlock() }
+        return calls
+    }
+}
+
 /// Fake tool implementations used by multi-step eval cases.
 ///
 /// Multi-step cases have to run the *real* `AgentLoop` — that is the whole point, since the
@@ -23,9 +42,10 @@ enum EvalStubRegistry {
     /// `find_contact` returns `EvalStubs.findContactResult`, whose number is the value the
     /// suite asserts on step two. The model can only produce that number by reading step
     /// one's `<tool_response>` — which is exactly the capability being measured.
-    static func make(mirroring live: ToolRegistry) -> ToolRegistry {
-        ToolRegistry(tools: live.specs.map { spec in
+    static func make(mirroring live: ToolRegistry, trace: EvalExecutionTrace) -> ToolRegistry {
+        let primitives: [any AXTool] = live.specs.filter { $0.name != "repeat_steps" }.map { spec in
             EvalStubTool(spec: spec) { call in
+                trace.record(call)
                 switch spec.name {
                 case "find_contact":
                     return .ok(EvalStubs.findContactResult(name: call.string("name") ?? ""))
@@ -41,7 +61,8 @@ enum EvalStubRegistry {
                     return .ok("\(spec.name) completed.")
                 }
             }
-        })
+        }
+        return ToolRegistry(tools: primitives + [RepeatStepsTool(primitiveTools: primitives)])
     }
 }
 

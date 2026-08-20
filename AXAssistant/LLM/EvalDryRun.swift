@@ -138,21 +138,15 @@ struct AppToolValidator: ToolExecutionValidating {
             guard let steps = call.string("steps"), !steps.trimmingCharacters(in: .whitespaces).isEmpty else {
                 return "missing required argument steps"
             }
-            let parsed = WorkflowStep.parse(steps)
-            guard !parsed.isEmpty else { return "steps=\"\(steps)\" has no readable step" }
-            // The half AXCore cannot check: every step must name a real, repeatable,
-            // one-argument tool. This is the same resolution RepeatStepsTool.run does.
             let registry = MainActor.assumeIsolated { ToolRegistry.standard }
-            for step in parsed {
-                guard let tool = registry.tool(named: step.tool) else {
-                    return "\"\(step.tool)\" is not a tool"
-                }
-                guard tool.spec.risk != .confirm else {
-                    return "\"\(step.tool)\" needs confirmation, so it cannot repeat"
-                }
-                if (try? step.arguments(for: tool.spec)) == nil {
-                    return "\"\(step.tool)\" cannot take \"\(step.value ?? "")\" as its argument"
-                }
+            do {
+                _ = try WorkflowPlan.compile(
+                    steps: steps,
+                    times: call.int("times") ?? 1,
+                    tools: registry.specs.filter { $0.name != "repeat_steps" }
+                )
+            } catch {
+                return String(describing: error)
             }
             return nil
 

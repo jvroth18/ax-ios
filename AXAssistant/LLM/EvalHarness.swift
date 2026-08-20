@@ -87,26 +87,78 @@ enum EvalHarness {
         registry: ToolRegistry
     ) async -> EvalJudgment {
         let profile = currentProfile()
+        let trace = EvalExecutionTrace()
         let loop = AgentLoop(
             container: container,
-            registry: EvalStubRegistry.make(mirroring: registry),
+            registry: EvalStubRegistry.make(mirroring: registry, trace: trace),
             confirmer: EvalAutoConfirmer(),
             config: AgentConfig(
-                maxToolIterations: profile.suggestedMaxToolIterations ?? AgentConfig().maxToolIterations
+                // Score the same chain budget the shipping conversation uses. A model
+                // should never pass a chain here that the user's current app setting
+                // would stop early in production.
+                maxToolIterations: AppState.shared.settings.maxToolIterations
             ),
             profile: profile
         )
         do {
             let turn = try await loop.run(userText: evalCase.transcript, onPartial: { _ in })
-            return EvalJudge.judge(
+            let judged = EvalJudge.judge(
                 evalCase, calls: turn.toolCalls, replyText: turn.reply, validator: validator
             )
+            return executionChecked(judged, emitted: turn.toolCalls, trace: trace.snapshot(), registry: registry)
         } catch {
             return EvalJudgment(
                 outcome: .generationError(error.localizedDescription),
                 emittedCalls: [], executionCovered: false
             )
         }
+    }
+
+    /// Expands every workflow exactly as production does and compares it with the calls
+    /// the recording primitives actually received. A valid outer `repeat_steps` call is
+    /// not considered execution coverage unless every nested action ran in order.
+    static func executionChecked(
+        _ judged: EvalJudgment,
+        emitted: [ToolCall],
+        trace: [ToolCall],
+        registry: ToolRegistry
+    ) -> EvalJudgment {
+        var expected: [ToolCall] = []
+        for call in emitted {
+            if call.name == "repeat_steps", let steps = call.string("steps") {
+                do {
+                    let plan = try WorkflowPlan.compile(
+                        steps: steps,
+                        times: call.int("times") ?? 1,
+                        tools: registry.specs.filter { $0.name != "repeat_steps" }
+                    )
+                    expected.append(contentsOf: plan.calls)
+                } catch {
+                    return EvalJudgment(
+                        outcome: .executionRejected(tool: call.name, why: String(describing: error)),
+                        emittedCalls: judged.emittedCalls,
+                        executionCovered: false,
+                        executedCalls: trace.map(EvalJudge.summary)
+                    )
+                }
+            } else {
+                expected.append(call)
+            }
+        }
+        let expectedSummary = expected.map(EvalJudge.summary)
+        let actualSummary = trace.map(EvalJudge.summary)
+        let outcome: EvalOutcome
+        if judged.passed, expected != trace {
+            outcome = .executionTraceMismatch(expected: expectedSummary, got: actualSummary)
+        } else {
+            outcome = judged.outcome
+        }
+        return EvalJudgment(
+            outcome: outcome,
+            emittedCalls: judged.emittedCalls,
+            executionCovered: judged.executionCovered && expected == trace,
+            executedCalls: actualSummary
+        )
     }
 
     /// Runs the whole suite and assembles a committable report.
@@ -147,6 +199,7 @@ enum EvalHarness {
 
         return EvalReport(
             modelID: MetricsStore.shared.loadedModelID ?? "unknown",
+            modelRevision: ModelManager.shared.installedRevision(of: ModelManager.shared.choice),
             promptProfile: currentProfile().name,
             catalogDrift: drift(registry: registry),
             results: results,

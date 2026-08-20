@@ -107,4 +107,18 @@ final class WorkflowStepTests: XCTestCase {
             )
         }
     }
+
+    func testRejectsValueOutsideToolEnum() {
+        XCTAssertThrowsError(
+            try WorkflowStep(tool: "toggle_flashlight", value: "blink").arguments(for: flashlight)
+        ) { error in
+            XCTAssertEqual(
+                error as? WorkflowStep.ParseError,
+                .valueNotAllowed(
+                    tool: "toggle_flashlight", argument: "state", value: "blink",
+                    allowed: ["on", "off"]
+                )
+            )
+        }
+    }
 }

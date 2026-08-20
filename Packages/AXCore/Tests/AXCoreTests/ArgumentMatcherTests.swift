@@ -122,6 +122,58 @@ final class ArgumentMatcherTests: XCTestCase {
         XCTAssertNotNil(reason(matcher, .string("Dave's number")))
     }
 
+    func testWorkflowCycleRequiresExactOrderedActions() {
+        let matcher = ArgumentMatcher.workflowCycle([
+            WorkflowStep(tool: "toggle_flashlight", value: "on"),
+            WorkflowStep(tool: "wait", value: "0.25"),
+            WorkflowStep(tool: "toggle_flashlight", value: "off"),
+            WorkflowStep(tool: "wait", value: "0.25"),
+        ])
+
+        XCTAssertNil(reason(
+            matcher,
+            .string("toggle_flashlight:ON, wait:0.25; toggle_flashlight:off\nwait:0.25")
+        ))
+        XCTAssertNotNil(reason(matcher, .string("toggle_flashlight:on")), "on-only must fail")
+        XCTAssertNotNil(reason(
+            matcher,
+            .string("toggle_flashlight:off,wait:0.25,toggle_flashlight:on,wait:0.25")
+        ), "reversed cycle must fail")
+        XCTAssertNotNil(reason(
+            matcher,
+            .string("toggle_flashlight:on,toggle_flashlight:off")
+        ), "missing perceptible waits must fail")
+    }
+
+    func testWorkflowCycleAnyOfStillRejectsPartialAndReversedCycles() {
+        let matcher = ArgumentMatcher.workflowCycleAnyOf([
+            [
+                WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                WorkflowStep(tool: "toggle_flashlight", value: "off"),
+            ],
+            [
+                WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                WorkflowStep(tool: "wait", value: "0.25"),
+            ],
+            [
+                WorkflowStep(tool: "toggle_flashlight", value: "on"),
+                WorkflowStep(tool: "wait", value: "0.25"),
+                WorkflowStep(tool: "toggle_flashlight", value: "off"),
+                WorkflowStep(tool: "wait", value: "0.25"),
+            ],
+        ])
+        XCTAssertNil(reason(matcher, .string("toggle_flashlight:on,toggle_flashlight:off")))
+        XCTAssertNil(reason(matcher, .string(
+            "toggle_flashlight:on,toggle_flashlight:off,wait:0.25"
+        )))
+        XCTAssertNil(reason(matcher, .string(
+            "toggle_flashlight:on,wait:0.25,toggle_flashlight:off,wait:0.25"
+        )))
+        XCTAssertNotNil(reason(matcher, .string("toggle_flashlight:on")))
+        XCTAssertNotNil(reason(matcher, .string("toggle_flashlight:off,toggle_flashlight:on")))
+    }
+
     func testDisplayTrimsWholeNumbers() {
         XCTAssertEqual(ArgumentMatcher.display(.number(10.0)), "10")
         XCTAssertEqual(ArgumentMatcher.display(.number(1.5)), "1.5")
