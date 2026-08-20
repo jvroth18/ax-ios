@@ -18,6 +18,12 @@ final class SettingsStore {
     var toolsMode: Bool {
         didSet { UserDefaults.standard.set(toolsMode, forKey: "toolsMode") }
     }
+    /// Send only the tool schemas a request looks like it needs. Off until the eval
+    /// suite shows it costs nothing in accuracy — a router that omits the right tool
+    /// fails silently, which is worse than being slow.
+    var pruneToolsInPrompt: Bool {
+        didSet { UserDefaults.standard.set(pruneToolsInPrompt, forKey: "pruneToolsInPrompt") }
+    }
     /// Speak replies with Kokoro-82M (open, on-device, natural) instead of the system voice.
     var useKokoroVoice: Bool {
         didSet { UserDefaults.standard.set(useKokoroVoice, forKey: "useKokoroVoice") }
@@ -41,6 +47,7 @@ final class SettingsStore {
         silenceTimeout = defaults.object(forKey: "silenceTimeout") as? Double ?? 1.2
         maxToolIterations = defaults.object(forKey: "maxToolIterations") as? Int ?? 3
         toolsMode = defaults.object(forKey: "toolsMode") as? Bool ?? true
+        pruneToolsInPrompt = defaults.object(forKey: "pruneToolsInPrompt") as? Bool ?? false
         useKokoroVoice = defaults.object(forKey: "useKokoroVoice") as? Bool ?? false
         kokoroVoice = defaults.string(forKey: "kokoroVoice") ?? "af_heart"
         registeredShortcuts = defaults.stringArray(forKey: "registeredShortcuts") ?? []

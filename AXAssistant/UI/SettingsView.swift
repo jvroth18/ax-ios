@@ -25,6 +25,11 @@ struct SettingsView: View {
                 Text("How many tools AX may chain in one request. Higher = more capable multi-step actions, slower worst case.")
                     .font(W95.ui(11))
                     .foregroundStyle(W95.shadow)
+                Toggle("Send only relevant tools (faster, experimental)", isOn: $settings.pruneToolsInPrompt)
+                    .toggleStyle(W95CheckboxStyle())
+                Text("The full tool list costs ~1,700 tokens of prompt on every step. Narrowing it is faster but can hide a tool from the model.")
+                    .font(W95.ui(11))
+                    .foregroundStyle(W95.shadow)
             }
 
             W95GroupBox(label: "Voice") {

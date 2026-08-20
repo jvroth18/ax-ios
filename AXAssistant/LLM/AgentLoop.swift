@@ -22,6 +22,8 @@ struct AgentLoop {
     var config = AgentConfig()
     /// Per-model prompt tuning. Defaults to the one-size prompt every model used to get.
     var profile: PromptProfile = .standard
+    /// Narrow the prompt to the tools a request looks like it needs (see ToolRouter).
+    var pruneTools = false
 
     struct Turn {
         let reply: String
@@ -38,9 +40,14 @@ struct AgentLoop {
             currentDateTime: Self.formattedNow(),
             registeredShortcuts: await MainActor.run { AppState.shared.settings.registeredShortcuts }
         )
+        // The tool list is fixed for the whole turn: swapping schemas mid-chain would
+        // invalidate what the model was told it could do partway through.
+        let promptTools = pruneTools
+            ? ToolRouter.select(from: registry.specs, for: userText).tools
+            : registry.specs
         var messages: [ChatMessage] = [
             .init(role: .system, content: PromptBuilder.systemPrompt(
-                tools: registry.specs, context: context, profile: profile
+                tools: promptTools, context: context, profile: profile
             ))
         ]
         messages.append(contentsOf: history)
