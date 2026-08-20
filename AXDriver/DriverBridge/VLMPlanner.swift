@@ -79,7 +79,14 @@ struct VLMPlanner {
             return .stuck(reason: "Model produced no JSON: \(output.prefix(80))")
         }
         let json = String(output[start...end])
-        let decoded = try JSONDecoder().decode([String: JSONValue].self, from: Data(json.utf8))
+        // Keep these operations separate. In AX_DRIVER device builds, Swift 6.2's
+        // type checker can fail to produce a diagnostic for the nested generic call.
+        let data = Data(json.utf8)
+        let decoder = JSONDecoder()
+        let decoded: [String: JSONValue] = try decoder.decode(
+            [String: JSONValue].self,
+            from: data
+        )
         switch decoded["action"]?.stringValue {
         case "tap":
             guard let x = decoded["x"]?.numberValue, let y = decoded["y"]?.numberValue else {
