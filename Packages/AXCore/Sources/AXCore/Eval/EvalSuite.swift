@@ -1,6 +1,6 @@
 import Foundation
 
-/// The golden suite: 43 cases across six classes, all written against `EvalClock.pinned`
+/// The golden suite, all written against `EvalClock.pinned`
 /// (Wednesday 2026-08-19 14:30 America/New_York).
 ///
 /// Day arithmetic from the reference, for reading the `dayOffset`s below:
@@ -12,7 +12,7 @@ public enum EvalSuite {
 
     /// Bump when cases change semantics, so an old report is never silently compared to a
     /// new suite.
-    public static let version = "2026.08.20-1"
+    public static let version = "2026.08.20-2"
 
     public static var all: [EvalCase] {
         singleTool + dateExtraction + negative + multiStep + ambiguity + spuriousExtra + workflow
@@ -22,7 +22,7 @@ public enum EvalSuite {
         all.filter { $0.caseClass == caseClass }
     }
 
-    // MARK: - Single tool (10)
+    // MARK: - Single tool (12)
 
     public static let singleTool: [EvalCase] = [
         EvalCase(
@@ -87,6 +87,20 @@ public enum EvalSuite {
             caseClass: .singleTool,
             expected: [ExpectedCall("run_shortcut", ["name": .exact("Goodnight")])],
             note: "Exact match: the tool refuses names that aren't registered verbatim."
+        ),
+        EvalCase(
+            id: "single-morse-sos",
+            transcript: "Use the flashlight to signal SOS in Morse code",
+            caseClass: .singleTool,
+            expected: [ExpectedCall("signal_morse_code", ["text": .caseInsensitive("SOS")])],
+            note: "The model passes source text once; deterministic code owns dots, dashes, and timing."
+        ),
+        EvalCase(
+            id: "single-morse-implicit-flashlight",
+            transcript: "Turn Meet at 5 into Morse code",
+            caseClass: .singleTool,
+            expected: [ExpectedCall("signal_morse_code", ["text": .caseInsensitive("Meet at 5")])],
+            note: "The dedicated Morse function implies flashlight signaling without a second tool call."
         ),
     ]
 
@@ -236,7 +250,7 @@ public enum EvalSuite {
         ),
     ]
 
-    // MARK: - Negative (11)
+    // MARK: - Negative (12)
 
     /// `.pass` means no tool fired. The old suite had none of these, so the failure mode
     /// that actually costs a user something — a spurious calendar write — was unmeasurable.
@@ -305,6 +319,12 @@ public enum EvalSuite {
             transcript: "How does a phone work?",
             caseClass: .negative,
             note: "The word phone is a topic; it is not permission to dial."
+        ),
+        EvalCase(
+            id: "negative-explain-morse",
+            transcript: "Explain how Morse code works",
+            caseClass: .negative,
+            note: "A factual question about Morse is conversation, not a request to flash the torch."
         ),
     ]
 

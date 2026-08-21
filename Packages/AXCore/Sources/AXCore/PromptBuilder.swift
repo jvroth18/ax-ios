@@ -75,6 +75,32 @@ public enum PromptBuilder {
             """)
         }
 
+        if tools.contains(where: { $0.name == "signal_morse_code" }) {
+            lines.append("""
+            # Morse signaling
+
+            ONLY call signal_morse_code when the user's request explicitly asks for Morse \
+            code or dot-and-dash flashlight signaling. Never use it for ordinary text, \
+            greetings, explanations, or creative requests. When it does apply, pass only \
+            the source message being converted — strip command words such as "turn", \
+            "signal", and "into Morse code". Do not translate the source into dots and \
+            dashes yourself; the tool performs exact encoding and flashlight timing.
+
+            Example — "Use the flashlight to signal SOS in Morse code":
+            <tool_call>
+            {"name": "signal_morse_code", "arguments": {"text": "SOS"}}
+            </tool_call>
+
+            Example — "Turn Meet at 5 into Morse code":
+            <tool_call>
+            {"name": "signal_morse_code", "arguments": {"text": "Meet at 5"}}
+            </tool_call>
+
+            Counterexample — "Tell me a joke about penguins" has no Morse request, so \
+            answer with a joke in plain language and do not call signal_morse_code.
+            """)
+        }
+
         if profile.includeWorkflowGuidance {
             var workflow = """
             # Repetition

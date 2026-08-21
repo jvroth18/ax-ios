@@ -7,6 +7,12 @@
     "negative-capital-of-france": [
       "Paris."
     ],
+    "negative-explain-morse": [
+      "Morse code represents letters and numbers with timed dots and dashes."
+    ],
+    "single-morse-sos": [
+      "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}\n</tool_call>"
+    ],
     "workflow-blink-five": [
       "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
     ]

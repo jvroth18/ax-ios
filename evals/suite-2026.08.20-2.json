@@ -1,0 +1,1321 @@
+{
+  "cases" : [
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "state" : {
+              "caseInsensitive" : {
+                "_0" : "on"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "toggle_flashlight"
+        }
+      ],
+      "id" : "single-flashlight-on",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn on the flashlight"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "state" : {
+              "caseInsensitive" : {
+                "_0" : "on"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "toggle_flashlight"
+        }
+      ],
+      "id" : "single-flashlight-indirect",
+      "note" : "Intent stated as a complaint, not a command.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "It's pitch black in here, can you give me some light"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "action" : {
+              "caseInsensitive" : {
+                "_0" : "pause"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "play_music"
+        }
+      ],
+      "id" : "single-music-pause",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Pause the music"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "action" : {
+              "caseInsensitive" : {
+                "_0" : "next"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "play_music"
+        }
+      ],
+      "id" : "single-music-next",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Skip this song"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 10,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "single-timer-10",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for 10 minutes"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 1.5,
+                "tolerance" : 0.01
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "single-timer-90-seconds",
+      "note" : "Sub-minute duration expressed in words; minutes is a number, not an integer.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for a minute and a half"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+
+          },
+          "execution" : "accept",
+          "tool" : "read_next_events"
+        }
+      ],
+      "id" : "single-calendar-read",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What's on my calendar today?"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "app" : {
+              "caseInsensitive" : {
+                "_0" : "maps"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "open_app"
+        }
+      ],
+      "id" : "single-open-maps",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Open Maps"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "contains" : {
+                "_0" : "dave"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "find_contact"
+        }
+      ],
+      "id" : "single-find-contact",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What's Dave's phone number?"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "exact" : {
+                "_0" : "Goodnight"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "run_shortcut"
+        }
+      ],
+      "id" : "single-run-shortcut",
+      "note" : "Exact match: the tool refuses names that aren't registered verbatim.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Run my Goodnight shortcut"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "text" : {
+              "caseInsensitive" : {
+                "_0" : "SOS"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "signal_morse_code"
+        }
+      ],
+      "id" : "single-morse-sos",
+      "note" : "The model passes source text once; deterministic code owns dots, dashes, and timing.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Use the flashlight to signal SOS in Morse code"
+    },
+    {
+      "caseClass" : "singleTool",
+      "expected" : [
+        {
+          "arguments" : {
+            "text" : {
+              "caseInsensitive" : {
+                "_0" : "Meet at 5"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "signal_morse_code"
+        }
+      ],
+      "id" : "single-morse-implicit-flashlight",
+      "note" : "The dedicated Morse function implies flashlight signaling without a second tool call.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn Meet at 5 into Morse code"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 0,
+                      "hour" : 17,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "mom"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-5pm-today",
+      "note" : "The case that would have caught the create_reminder bug: the prompt teaches a zone-less ISO string, which the tool's own parser used to reject. Argument scoring alone passes it; only execution validation catches it.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to call mom at 5pm today"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "start" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 1,
+                      "hour" : 12,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "sarah"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_calendar_event"
+        }
+      ],
+      "id" : "date-calendar-lunch-tomorrow-noon",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Put lunch with Sarah on my calendar tomorrow at noon"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 1,
+                      "hour" : 8,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "trash"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-tomorrow-8am",
+      "note" : "Spelled-out hour plus an AM/PM cue carried only by the word \"morning\".",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to take the trash out tomorrow morning at eight"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 0,
+                      "hour" : 21,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "medicine"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-tonight-9",
+      "note" : "\"Tonight\" is still today at 14:30 — a model that adds a day is wrong.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to take my medicine tonight at nine"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "start" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 2,
+                      "hour" : 9,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "dentist"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_calendar_event"
+        }
+      ],
+      "id" : "date-calendar-friday-9am",
+      "note" : "Named weekday: Friday is 2026-08-21, two days after the reference.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Schedule a dentist appointment for Friday at 9am"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 3,
+                      "hour" : 12,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "vet"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-saturday-noon",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to call the vet on Saturday at noon"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "relative" : {
+                      "seconds" : 1200
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 120
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "oven"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-in-20-minutes",
+      "note" : "Duration-shaped phrasing that must NOT become set_timer, and that requires adding to the current time rather than reading a clock face.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me in twenty minutes to check the oven"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "start" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 5,
+                      "hour" : 15,
+                      "minute" : 0
+                    }
+                  },
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 12,
+                      "hour" : 15,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "design review"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_calendar_event"
+        }
+      ],
+      "id" : "date-calendar-next-monday-3pm",
+      "note" : "\"Next Monday\" is genuinely bi-modal for humans, so both readings pass — but 3pm rather than 3am is not optional.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Block out three o'clock next Monday for the design review"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "duration_minutes" : {
+              "number" : {
+                "_0" : 30,
+                "tolerance" : 0
+              }
+            },
+            "start" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 0,
+                      "hour" : 16,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "alex"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_calendar_event"
+        }
+      ],
+      "id" : "date-calendar-30-minute-call",
+      "note" : "Duration and start time in one sentence; \"four\" must read as 16:00.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Put a thirty minute call with Alex on my calendar at four today"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "start" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 1,
+                      "hour" : 8,
+                      "minute" : 30
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "priya"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_calendar_event"
+        }
+      ],
+      "id" : "date-calendar-tomorrow-830",
+      "note" : "Non-o'clock minutes, which small models love to round to :00.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Coffee with Priya tomorrow at eight thirty in the morning"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "absent" : {
+
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "milk"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-no-time",
+      "note" : "The inverse failure: no time was given, so inventing a due date is wrong. `due` is optional in the schema and the model must leave it out.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to buy milk"
+    },
+    {
+      "caseClass" : "dateExtraction",
+      "expected" : [
+        {
+          "arguments" : {
+            "due" : {
+              "resolvedDateAnyOf" : {
+                "_0" : [
+                  {
+                    "wallClock" : {
+                      "dayOffset" : 2,
+                      "hour" : 10,
+                      "minute" : 0
+                    }
+                  }
+                ],
+                "toleranceSeconds" : 60
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "invoice"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "date-reminder-day-after-tomorrow",
+      "note" : "Two-step relative offset — the arithmetic small models most often drop.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Remind me to send the invoice the day after tomorrow at ten in the morning"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-standalone-greeting",
+      "note" : "Regression: a standalone greeting once attempted to compose a message.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Hi"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-capital-of-france",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What's the capital of France?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-small-talk",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "How's your day going?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-thanks",
+      "note" : "A closing pleasantry; some models answer it with run_shortcut.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Thanks, that's all for now"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-minutes-in-a-day",
+      "note" : "Bait for set_timer: the sentence contains a duration but asks for a fact.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "How many minutes are there in a day?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-what-time-is-it",
+      "note" : "Answerable from the injected current-time line. A tool call here means the model didn't read its own context.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What time is it right now?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-capability-question",
+      "note" : "A question *about* a capability, not a request to use it — bait for read_next_events.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Can you actually see my calendar?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-joke",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Tell me a joke about penguins"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-explain-acronym",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What does the acronym API stand for?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-explain-error-message",
+      "note" : "The word message describes text; it is not permission to compose one.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Explain this error message in plain English"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-how-phone-works",
+      "note" : "The word phone is a topic; it is not permission to dial.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "How does a phone work?"
+    },
+    {
+      "caseClass" : "negative",
+      "expected" : [
+
+      ],
+      "id" : "negative-explain-morse",
+      "note" : "A factual question about Morse is conversation, not a request to flash the torch.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Explain how Morse code works"
+    },
+    {
+      "caseClass" : "multiStep",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "contains" : {
+                "_0" : "dave"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "find_contact"
+        },
+        {
+          "arguments" : {
+            "number" : {
+              "digits" : {
+                "_0" : "+1 (415) 555-0147"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "call_number"
+        }
+      ],
+      "id" : "multi-call-dave",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Call Dave"
+    },
+    {
+      "caseClass" : "multiStep",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "contains" : {
+                "_0" : "mom"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "find_contact"
+        },
+        {
+          "arguments" : {
+            "number" : {
+              "digits" : {
+                "_0" : "+1 (415) 555-0147"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "call_number"
+        }
+      ],
+      "id" : "multi-call-mom",
+      "note" : "Idiomatic phrasing for the same chain.",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Give my mom a ring"
+    },
+    {
+      "caseClass" : "multiStep",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "contains" : {
+                "_0" : "sarah"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "find_contact"
+        },
+        {
+          "arguments" : {
+            "body" : {
+              "contains" : {
+                "_0" : "late"
+              }
+            },
+            "number" : {
+              "digits" : {
+                "_0" : "+1 (415) 555-0147"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "compose_message"
+        }
+      ],
+      "id" : "multi-text-sarah-late",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Text Sarah that I'm running about ten minutes late"
+    },
+    {
+      "caseClass" : "multiStep",
+      "expected" : [
+        {
+          "arguments" : {
+            "name" : {
+              "contains" : {
+                "_0" : "dave"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "find_contact"
+        },
+        {
+          "arguments" : {
+            "number" : {
+              "digits" : {
+                "_0" : "+1 (415) 555-0147"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "call_number"
+        }
+      ],
+      "id" : "multi-lookup-then-call",
+      "note" : "The chain stated explicitly, as a difficulty floor for the two above.",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Find Dave's number and then call him"
+    },
+    {
+      "caseClass" : "ambiguity",
+      "expected" : [
+
+      ],
+      "id" : "ambiguous-remind-me-about-the-thing",
+      "orderMatters" : false,
+      "requiresQuestion" : true,
+      "transcript" : "Remind me about the thing"
+    },
+    {
+      "caseClass" : "ambiguity",
+      "expected" : [
+
+      ],
+      "id" : "ambiguous-set-a-timer",
+      "note" : "No duration. Guessing five minutes is a worse answer than asking.",
+      "orderMatters" : false,
+      "requiresQuestion" : true,
+      "transcript" : "Set a timer"
+    },
+    {
+      "caseClass" : "ambiguity",
+      "expected" : [
+
+      ],
+      "id" : "ambiguous-put-it-on-my-calendar",
+      "note" : "No title and no time — the two required arguments of create_calendar_event.",
+      "orderMatters" : false,
+      "requiresQuestion" : true,
+      "transcript" : "Put it on my calendar"
+    },
+    {
+      "caseClass" : "ambiguity",
+      "expected" : [
+
+      ],
+      "id" : "ambiguous-open-it",
+      "orderMatters" : false,
+      "requiresQuestion" : true,
+      "transcript" : "Open it"
+    },
+    {
+      "caseClass" : "ambiguity",
+      "expected" : [
+
+      ],
+      "id" : "ambiguous-text-her",
+      "note" : "Unresolvable pronoun; picking a contact would message the wrong person.",
+      "orderMatters" : false,
+      "requiresQuestion" : true,
+      "transcript" : "Text her that I'll be there"
+    },
+    {
+      "caseClass" : "spuriousExtra",
+      "expected" : [
+        {
+          "arguments" : {
+            "state" : {
+              "caseInsensitive" : {
+                "_0" : "on"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "toggle_flashlight"
+        }
+      ],
+      "id" : "extra-flashlight-and-joke",
+      "note" : "The joke is text, not a tool. Exactly one call.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn on the flashlight and tell me a joke"
+    },
+    {
+      "caseClass" : "spuriousExtra",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 5,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "extra-timer-and-weather",
+      "note" : "No weather tool exists; the model must decline that half in words.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for five minutes, and what's the weather like out there?"
+    },
+    {
+      "caseClass" : "spuriousExtra",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 20,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "extra-self-correction",
+      "note" : "Spoken self-correction. Two timers is the wrong answer; so is ten minutes.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for ten minutes — actually no, make it twenty"
+    },
+    {
+      "caseClass" : "spuriousExtra",
+      "expected" : [
+        {
+          "arguments" : {
+
+          },
+          "execution" : "accept",
+          "tool" : "read_next_events"
+        },
+        {
+          "arguments" : {
+            "due" : {
+              "absent" : {
+
+              }
+            },
+            "title" : {
+              "contains" : {
+                "_0" : "plant"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "create_reminder"
+        }
+      ],
+      "id" : "extra-two-legitimate-calls",
+      "note" : "The control for this class: two calls are genuinely correct here, so an over-strict \"never more than one call\" rule fails this case.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "What's on my calendar today, and remind me to water the plants"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "workflowCycle" : {
+                "_0" : [
+                  {
+                    "tool" : "toggle_flashlight",
+                    "value" : "on"
+                  },
+                  {
+                    "tool" : "wait",
+                    "value" : "0.25"
+                  },
+                  {
+                    "tool" : "toggle_flashlight",
+                    "value" : "off"
+                  },
+                  {
+                    "tool" : "wait",
+                    "value" : "0.25"
+                  }
+                ]
+              }
+            },
+            "times" : {
+              "number" : {
+                "_0" : 10,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        },
+        {
+          "arguments" : {
+            "number" : {
+              "digits" : {
+                "_0" : "6316452763"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "call_number"
+        }
+      ],
+      "id" : "workflow-blink-ten-then-call",
+      "note" : "The motivating case. Done one call at a time this is 31 hand-backs; done right it is two calls, and the loop budget never comes near its limit.",
+      "orderMatters" : true,
+      "requiresQuestion" : false,
+      "transcript" : "Toggle the light on and off then pause. Do this 10 times and then call 6316452763"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "workflowCycleAnyOf" : {
+                "_0" : [
+                  [
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "on"
+                    },
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "off"
+                    }
+                  ],
+                  [
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "on"
+                    },
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "off"
+                    },
+                    {
+                      "tool" : "wait",
+                      "value" : "0.25"
+                    }
+                  ],
+                  [
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "on"
+                    },
+                    {
+                      "tool" : "wait",
+                      "value" : "0.25"
+                    },
+                    {
+                      "tool" : "toggle_flashlight",
+                      "value" : "off"
+                    },
+                    {
+                      "tool" : "wait",
+                      "value" : "0.25"
+                    }
+                  ]
+                ]
+              }
+            },
+            "times" : {
+              "number" : {
+                "_0" : 5,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        }
+      ],
+      "id" : "workflow-blink-five",
+      "note" : "Spelled-out count: the number has to survive word-to-digit conversion.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn the flashlight on and off 5 times"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "workflowCycle" : {
+                "_0" : [
+                  {
+                    "tool" : "toggle_flashlight",
+                    "value" : "on"
+                  },
+                  {
+                    "tool" : "wait",
+                    "value" : "3"
+                  },
+                  {
+                    "tool" : "toggle_flashlight",
+                    "value" : "off"
+                  }
+                ]
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        }
+      ],
+      "id" : "workflow-pause-between-actions",
+      "note" : "Sequenced, not repeated. Scored on the workflow tool because the pause is the point; a model that instead chains toggle → wait → toggle is doing something defensible, and this case failing that way is worth reading as a tie, not a bug.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn the flashlight on, wait three seconds, then turn it off"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "state" : {
+              "caseInsensitive" : {
+                "_0" : "on"
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "toggle_flashlight"
+        }
+      ],
+      "id" : "workflow-single-action-no-repeat",
+      "note" : "The guard for this class. Adding a loop primitive gives every model a new way to over-engineer one switch; this is the case that catches it.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn on the flashlight"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "minutes" : {
+              "number" : {
+                "_0" : 10,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "set_timer"
+        }
+      ],
+      "id" : "workflow-timer-not-repeat",
+      "note" : "A \"10\" next to a duration, deliberately close to the phrasing of the repeat cases. Catches a model that has learned \"10 ⇒ repeat_steps\".",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Set a timer for 10 minutes"
+    },
+    {
+      "caseClass" : "workflow",
+      "expected" : [
+        {
+          "arguments" : {
+            "steps" : {
+              "workflowCycle" : {
+                "_0" : [
+                  {
+                    "tool" : "toggle_flashlight",
+                    "value" : "on"
+                  },
+                  {
+                    "tool" : "play_music",
+                    "value" : "pause"
+                  },
+                  {
+                    "tool" : "set_timer",
+                    "value" : "2"
+                  }
+                ]
+              }
+            },
+            "times" : {
+              "number" : {
+                "_0" : 1,
+                "tolerance" : 0
+              }
+            }
+          },
+          "execution" : "accept",
+          "tool" : "repeat_steps"
+        }
+      ],
+      "id" : "workflow-x-then-y-then-z",
+      "note" : "Generic ordered x → y → z sequence, compiled and executed deterministically.",
+      "orderMatters" : false,
+      "requiresQuestion" : false,
+      "transcript" : "Turn on the flashlight, then pause the music, then set a timer for 2 minutes"
+    }
+  ],
+  "referenceNow" : "Wednesday 2026-08-19 14:30, America/New_York",
+  "suiteVersion" : "2026.08.20-2"
+}

@@ -104,8 +104,8 @@ struct AgentLoop {
                 !RequestPolicy.allows(tool: $0.name, for: userText)
             }
             if !unauthorized.isEmpty {
-                // Never execute or display an unrequested communication action. Give the
-                // model one bounded chance to answer normally with an explicit correction.
+                // Never execute or display an unrequested guarded action. Give the model
+                // one bounded chance to answer normally with an explicit correction.
                 if iteration < config.maxToolIterations {
                     messages.append(.init(role: .assistant, content: completion))
                     messages.append(.init(
@@ -118,7 +118,7 @@ struct AgentLoop {
                 }
                 return Turn(
                     reply: parsed.text.isEmpty
-                        ? "I won't start a call or message unless you explicitly ask me to."
+                        ? "I won't run a device action unless you explicitly ask me to."
                         : parsed.text,
                     toolCalls: allCalls,
                     toolResults: allResults

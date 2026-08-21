@@ -33,6 +33,9 @@ public enum ArgumentContract: Sendable, Equatable, Codable {
     case dialableNumber
     case nonEmptyString
     case memberOf([String])
+    /// Source text accepted by the shipping Morse encoder, including its character and
+    /// total-duration safety limits.
+    case morseText
     /// A `repeat_steps` step list that reads as at least one "tool:value" step. Partial by
     /// construction: whether each named tool exists, is repeatable, and takes one argument
     /// is only knowable against a live registry, so that half is checked on device.
@@ -73,6 +76,14 @@ public enum ArgumentContract: Sendable, Equatable, Codable {
         case .nonEmptyString:
             let raw = ArgumentMatcher.display(value).trimmingCharacters(in: .whitespacesAndNewlines)
             return raw.isEmpty ? "\(argument) is empty" : nil
+        case .morseText:
+            guard let raw = value.stringValue else { return "\(argument) is not a string" }
+            do {
+                _ = try MorseCode.encode(raw)
+                return nil
+            } catch {
+                return String(describing: error)
+            }
         case .workflowSteps:
             guard let text = value.stringValue, !text.trimmingCharacters(in: .whitespaces).isEmpty else {
                 return "steps must be a non-empty string"
@@ -173,6 +184,11 @@ public struct ContractValidator: ToolExecutionValidating {
             tool: "toggle_flashlight",
             required: ["state"],
             arguments: ["state": .memberOf(["on", "off"])]
+        ),
+        ToolContract(
+            tool: "signal_morse_code",
+            required: ["text"],
+            arguments: ["text": .morseText]
         ),
         ToolContract(
             tool: "play_music",

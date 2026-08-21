@@ -26,6 +26,7 @@ struct ToolRegistry: Sendable {
             OpenURLTool(),
             TimerTool(),
             FlashlightTool(),
+            MorseFlashlightTool(),
             MusicTool(),
             ShortcutTool(),
             RememberTool(),

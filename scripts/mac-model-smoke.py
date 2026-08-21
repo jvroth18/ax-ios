@@ -103,9 +103,29 @@ def main():
             ("greeting", "Hi"),
             ("joke", "Tell me a joke about penguins"),
             ("phone-fact", "How does a phone work?"),
+            ("morse-fact", "Explain how Morse code works"),
         ]:
             completion = complete(base(user), seed)
             passed = bool(completion.strip()) and not tool_calls(completion)
+            checks.append({"id": identifier, "passed": passed, "completions": [completion]})
+
+        for identifier, user, expected_text in [
+            ("morse-sos", "Use the flashlight to signal SOS in Morse code", "SOS"),
+            ("morse-implicit", "Turn Meet at 5 into Morse code", "Meet at 5"),
+            (
+                "morse-complex-sentence",
+                "Signal this complete sentence in Morse code: Meet me at Gate 5, and bring maps!",
+                "Meet me at Gate 5, and bring maps!",
+            ),
+        ]:
+            completion = complete(base(user), seed)
+            calls = tool_calls(completion)
+            call = calls[0] if len(calls) == 1 else {}
+            actual_text = str(call.get("arguments", {}).get("text", ""))
+            passed = (
+                call.get("name") == "signal_morse_code"
+                and actual_text.casefold() == expected_text.casefold()
+            )
             checks.append({"id": identifier, "passed": passed, "completions": [completion]})
 
         user = "Turn the flashlight on and off 5 times"
