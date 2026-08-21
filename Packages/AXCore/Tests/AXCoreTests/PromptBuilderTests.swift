@@ -95,4 +95,18 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertTrue(prompt.contains("Turn the flashlight on and off 5 times"))
         XCTAssertTrue(prompt.contains(#""times": 5"#))
     }
+
+    func testMorsePromptPassesSourceTextToDedicatedTool() {
+        let morse = EvalToolCatalog.specs.first { $0.name == "signal_morse_code" }!
+        let prompt = PromptBuilder.systemPrompt(
+            tools: [morse],
+            context: .init(currentDateTime: "Monday 2026-08-17 14:00, America/New_York"),
+            profile: .small
+        )
+        XCTAssertTrue(prompt.contains("ONLY call signal_morse_code"))
+        XCTAssertTrue(prompt.contains(#"{"name": "signal_morse_code", "arguments": {"text": "SOS"}}"#))
+        XCTAssertTrue(prompt.contains(#"{"name": "signal_morse_code", "arguments": {"text": "Meet at 5"}}"#))
+        XCTAssertTrue(prompt.contains("Do not translate the source into dots and dashes yourself"))
+        XCTAssertTrue(prompt.contains("Tell me a joke about penguins"))
+    }
 }

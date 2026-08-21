@@ -153,6 +153,21 @@ public enum EvalToolCatalog {
             risk: .safe
         ),
         ToolSpec(
+            name: "signal_morse_code",
+            description: "Flash text as International Morse code using the iPhone flashlight. Pass the original text; this tool performs the encoding and timing.",
+            parameters: JSONSchema(
+                type: .object,
+                properties: [
+                    "text": JSONSchema(
+                        type: .string,
+                        description: "The original letters, numbers, words, or punctuation to signal; do not translate it to dots and dashes"
+                    ),
+                ],
+                required: ["text"]
+            ),
+            risk: .safe
+        ),
+        ToolSpec(
             name: "play_music",
             description: "Play, pause, or skip in Apple Music.",
             parameters: JSONSchema(

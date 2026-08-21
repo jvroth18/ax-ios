@@ -27,7 +27,13 @@ jobs:
           swift run ax-eval score ../../evals/fixtures/judge-smoke.json "$RUNNER_TEMP/evalout"
           python3 - "$RUNNER_TEMP/evalout" <<'PY'
           import json, pathlib, sys
-          expected = {"single-flashlight-on", "negative-capital-of-france", "workflow-blink-five"}
+          expected = {
+              "single-flashlight-on",
+              "single-morse-sos",
+              "negative-capital-of-france",
+              "negative-explain-morse",
+              "workflow-blink-five",
+          }
           report = json.loads(next(pathlib.Path(sys.argv[1]).glob("results-*.json")).read_text())
           passed = {r["id"] for r in report["results"] if r["passed"]}
           missing = expected - passed

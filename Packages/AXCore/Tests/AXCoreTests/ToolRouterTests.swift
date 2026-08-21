@@ -22,6 +22,12 @@ final class ToolRouterTests: XCTestCase {
         XCTAssertTrue(selection("Set a timer for 10 minutes").contains("set_timer"))
     }
 
+    func testKeepsMorseToolForMorseRequest() {
+        let result = ToolRouter.select(from: tools, for: "Signal SOS in Morse code")
+        XCTAssertTrue(result.narrowed)
+        XCTAssertTrue(result.tools.contains { $0.name == "signal_morse_code" })
+    }
+
     func testKeepsCalendarToolForACalendarRequest() {
         XCTAssertTrue(selection("Put lunch with Sarah on my calendar tomorrow").contains("create_calendar_event"))
     }

@@ -33,6 +33,15 @@ public enum RequestPolicy {
             return index == 0 || ["please", "you"].contains(tokens[index - 1])
         case "call_number":
             return !words.isDisjoint(with: ["call", "dial", "ring"])
+        case "signal_morse_code":
+            // A text-shaped argument makes this tool tempting to small models. Require
+            // the user's own request to name Morse (or the equivalent dot/dash signal),
+            // so a joke or explanation can never flash the hardware by accident.
+            if words.contains("morse") { return true }
+            return words.contains("flashlight")
+                && words.contains("signal")
+                && words.contains("dots")
+                && words.contains("dashes")
         default:
             return true
         }

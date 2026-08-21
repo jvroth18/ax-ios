@@ -29,4 +29,19 @@ final class RequestPolicyTests: XCTestCase {
         XCTAssertFalse(RequestPolicy.allows(tool: "call_number", for: "How does a phone work?"))
         XCTAssertTrue(RequestPolicy.allows(tool: "call_number", for: "Give Mom a ring"))
     }
+
+    func testMorseToolRequiresExplicitMorseIntent() {
+        XCTAssertTrue(RequestPolicy.allows(
+            tool: "signal_morse_code", for: "Turn Meet at 5 into Morse code"
+        ))
+        XCTAssertTrue(RequestPolicy.allows(
+            tool: "signal_morse_code", for: "Use the flashlight to signal dots and dashes"
+        ))
+        XCTAssertFalse(RequestPolicy.allows(
+            tool: "signal_morse_code", for: "Tell me a joke about penguins"
+        ))
+        XCTAssertFalse(RequestPolicy.allows(
+            tool: "signal_morse_code", for: "Explain how signals work"
+        ))
+    }
 }

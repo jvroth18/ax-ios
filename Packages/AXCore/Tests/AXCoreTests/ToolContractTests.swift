@@ -101,6 +101,20 @@ final class ToolContractTests: XCTestCase {
         ])))
     }
 
+    func testMorseTextRunsTheShippingEncoderContract() {
+        XCTAssertTrue(validator.covers(tool: "signal_morse_code"))
+        XCTAssertNil(validator.rejectionReason(for: call("signal_morse_code", [
+            "text": .string("SOS"),
+        ])))
+        XCTAssertNotNil(validator.rejectionReason(for: call("signal_morse_code", [:])))
+        XCTAssertNotNil(validator.rejectionReason(for: call("signal_morse_code", [
+            "text": .string("SOS 🚀"),
+        ])))
+        XCTAssertNil(validator.rejectionReason(for: call("signal_morse_code", [
+            "text": .string(String(repeating: "Meet at 5. ", count: 100)),
+        ])))
+    }
+
     func testUnknownToolsAreNotClaimedAsCovered() {
         XCTAssertFalse(validator.covers(tool: "http_request"))
         XCTAssertNil(validator.rejectionReason(for: call("http_request", [:])))
