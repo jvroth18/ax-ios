@@ -112,6 +112,11 @@ def main():
         for identifier, user, expected_text in [
             ("morse-sos", "Use the flashlight to signal SOS in Morse code", "SOS"),
             ("morse-implicit", "Turn Meet at 5 into Morse code", "Meet at 5"),
+            (
+                "morse-complex-sentence",
+                "Signal this complete sentence in Morse code: Meet me at Gate 5, and bring maps!",
+                "Meet me at Gate 5, and bring maps!",
+            ),
         ]:
             completion = complete(base(user), seed)
             calls = tool_calls(completion)

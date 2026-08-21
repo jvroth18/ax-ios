@@ -45,21 +45,21 @@ final class MorseCodeTests: XCTestCase {
         XCTAssertTrue(transmission.notation.hasSuffix("..... -.-.--"))
     }
 
-    func testRejectsEmptyUnsupportedOverlongAndOverDurationInputs() {
+    func testRejectsEmptyAndUnsupportedInputs() {
         XCTAssertThrowsError(try MorseCode.encode("   ")) { error in
             XCTAssertEqual(error as? MorseCode.EncodingError, .empty)
         }
         XCTAssertThrowsError(try MorseCode.encode("SOS 🚀")) { error in
             XCTAssertEqual(error as? MorseCode.EncodingError, .unsupportedCharacters("🚀"))
         }
-        XCTAssertThrowsError(try MorseCode.encode(String(repeating: "E", count: 65))) { error in
-            XCTAssertEqual(error as? MorseCode.EncodingError, .tooLong(65))
-        }
-        XCTAssertThrowsError(try MorseCode.encode(String(repeating: "0", count: 64))) { error in
-            guard case .durationExceeded(let seconds) = error as? MorseCode.EncodingError else {
-                return XCTFail("expected durationExceeded, got \(error)")
-            }
-            XCTAssertGreaterThan(seconds, MorseCode.maxDurationSeconds)
-        }
+    }
+
+    func testAllowsLongComplexSentencesWithoutLengthOrDurationCaps() throws {
+        let source = String(repeating: "Meet me at 5, bring maps! ", count: 20)
+        let transmission = try MorseCode.encode(source)
+
+        XCTAssertGreaterThan(source.count, 64)
+        XCTAssertGreaterThan(transmission.durationSeconds, 120)
+        XCTAssertTrue(transmission.normalizedText.hasPrefix("MEET ME AT 5, BRING MAPS!"))
     }
 }

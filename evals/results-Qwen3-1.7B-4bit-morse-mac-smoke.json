@@ -4,8 +4,8 @@
   "mlxLMVersion": "0.31.3",
   "platform": "macOS-26.6.2-arm64-arm-64bit",
   "promptFile": "/tmp/ax-morse-qwen-prompt.txt",
-  "promptSHA256": "d1007c29e2c04960d4195f04c926d10d53a6b48e034fbe7710e72fa2e70b10d2",
-  "loadSeconds": 0.976,
+  "promptSHA256": "e1d364440301a4f54f9e249f13677ade08277497707db5d1ff0cf2f247942a2c",
+  "loadSeconds": 1.314,
   "passed": true,
   "runs": [
     {
@@ -23,28 +23,28 @@
           "id": "joke",
           "passed": true,
           "completions": [
-            "hilariously, penguins are the best at swimming and never get stuck in snow."
+            "Why don't penguins ever get into trouble? They always have ice to stand on."
           ]
         },
         {
           "id": "phone-fact",
           "passed": true,
           "completions": [
-            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and storage to run apps and store data. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform tasks like making calls, sending messages, or browsing the internet. They also use cellular networks to connect to the internet and communicate with other devices."
+            "Phone works by using a combination of hardware and software to communicate and process information. It has a main processor, memory, and various components like the camera, microphone, and screen. When you use a phone, it processes the information you input through the keyboard or touchscreen, and then sends it to other devices or the internet. The phone also receives signals from the internet and uses them to communicate with other devices."
           ]
         },
         {
           "id": "morse-fact",
           "passed": true,
           "completions": [
-            "The Morse code system uses a series of dots (.) and dashes (-) to represent letters and numbers. Each letter is encoded using a unique combination of these symbols, with the following rules:\n\n- **Dot** (.) is used for letters that are pronounced with a short, clear sound.\n- **Dash** (-) is used for letters that are pronounced with a longer, more sustained sound.\n- **Space** is represented by a space in the message, and is not part of the code itself.\n\nFor example:\n- **A** is represented as **.** (a single dot)\n- **B** is **-** (a dash)\n- **C** is **- .** (a dash followed by a dot)\n- **D** is **- -** (two dashes)\n- **E** is **.** (a single dot)\n- **F** is **"
+            "Morse code is a form of communication using a series of dots and dashes to represent letters and words. Each letter is encoded as a sequence of these symbols, where a dot is a single mark and a dash is a long mark. The basic rules are:\n\n- **Dot (.)** = a single short mark.\n- **Dash (\u2212)** = a long mark.\n- **Space** = a gap between letters or words.\n\nIn Morse code, each letter is represented by a unique combination of dots and dashes. For example:\n- **A** = .-\n- **B** = -..\n- **C** = -.\n\nThe code is read by the receiver, who decodes the dots and dashes back into letters. The spaces between the symbols represent the actual letters in the word. This system allows for clear and concise communication over long distances."
           ]
         },
         {
           "id": "morse-sos",
           "passed": true,
           "completions": [
-            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}\n</tool_call>"
           ]
         },
         {
@@ -55,10 +55,17 @@
           ]
         },
         {
+          "id": "morse-complex-sentence",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet me at Gate 5, and bring maps!\"}}"
+          ]
+        },
+        {
           "id": "blink-five",
           "passed": true,
           "completions": [
-            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
           ]
         },
         {
@@ -66,7 +73,7 @@
           "passed": true,
           "completions": [
             "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
-            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+            "{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}"
           ]
         },
         {
@@ -93,28 +100,28 @@
           "id": "joke",
           "passed": true,
           "completions": [
-            "hilariously, penguins are the best at swimming and never get stuck in snow."
+            "Why don't penguins play chess? They can't find a hole."
           ]
         },
         {
           "id": "phone-fact",
           "passed": true,
           "completions": [
-            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and storage to run apps and handle tasks. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform actions like calling a friend or sending a message. They also use cellular networks to connect to the internet and other devices."
+            "Phone works by using a combination of hardware and software to communicate and process information. It has a main processor, memory, and various components like the camera, microphone, and screen. When you use a phone, it processes the information you input through the keyboard or touchscreen, and then sends it through the internet or cellular network to other devices or services."
           ]
         },
         {
           "id": "morse-fact",
           "passed": true,
           "completions": [
-            "The Morse code system uses a series of short and long signals to represent letters and numbers. Each letter is represented by a unique combination of dots (.) and dashes (-), where a dot is shorter than a dash. The basic rules are:\n\n- **Dot (.)** is a single stroke, representing a \"yes\" or \"one.\"\n- **Dash (-)** is a longer stroke, representing a \"no\" or \"zero.\"\n- **Space** is used to separate different letters and words.\n\nFor example:\n- **A** is represented as **. -** (a dot followed by a dash)\n- **B** is **- . .** (a dash followed by two dots)\n- **SOS** is **- . -** (a dash, a dot, and a dash).\n\nMorse code is used in communication over long distances, such as in radio, and it"
+            "Morse code is a form of communication using two signals: a short signal (a dot) and a long signal (a dash). These signals are separated by a short pause (a space), and the letters and words are formed by combining these signals.\n\n- **Dot (.)** represents a letter or number, and it is shorter than a dash.\n- **Dash (-)** represents a letter or number, and it is longer than a dot.\n- **Space** separates the dots and dashes in a letter, and it is a short pause (one or two seconds).\n\nFor example:\n- **\"SOS\"** in Morse code is: **\"---\"**.\n- **\"HELLO\"** would be: **\"....-...-...-..\"**.\n\nMorse code is used in radio communication, and it's a way to send messages over long distances."
           ]
         },
         {
           "id": "morse-sos",
           "passed": true,
           "completions": [
-            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}\n</tool_call>"
           ]
         },
         {
@@ -125,10 +132,17 @@
           ]
         },
         {
+          "id": "morse-complex-sentence",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet me at Gate 5, and bring maps!\"}}"
+          ]
+        },
+        {
           "id": "blink-five",
           "passed": true,
           "completions": [
-            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
           ]
         },
         {
@@ -136,7 +150,7 @@
           "passed": true,
           "completions": [
             "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
-            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+            "{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}"
           ]
         },
         {
@@ -163,28 +177,28 @@
           "id": "joke",
           "passed": true,
           "completions": [
-            "hilariously, penguins are the best at swimming and never get stuck in snow."
+            "Why did the penguin fall off the ice? Because he was too eager to get down!"
           ]
         },
         {
           "id": "phone-fact",
           "passed": true,
           "completions": [
-            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and various components like the camera, microphone, and screen. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform tasks like calling a friend, sending a message, or playing music. The phone also connects to the internet through a cellular network, allowing it to access the web and communicate with other devices."
+            "Phone works by using a combination of hardware and software to communicate and process information. It has a main processor, memory, and various components like the camera, microphone, and screen. When you use a phone, it processes the information you input through the keyboard or touchscreen, and then sends it through the internet or cellular network to other devices or services."
           ]
         },
         {
           "id": "morse-fact",
           "passed": true,
           "completions": [
-            "The Morse code system uses a series of short and long signals to represent letters and numbers. Each letter is represented by a unique combination of dots (.) and dashes (-), where a dot is shorter than a dash. The basic rules are:\n\n- **Dot (.)** is a single stroke, representing a \"yes\" or \"one.\"\n- **Dash (-)** is a longer stroke, representing a \"no\" or \"zero.\"\n- **Space** is used to separate different characters or words.\n\nFor example:\n- **A** is represented as **. -** (a dot followed by a dash)\n- **B** is **- . .** (a dash followed by two dots)\n- **SOS** is **- . -** (a dash, a dot, and a dash).\n\nMorse code is used in communication, especially in radio, to transmit information clearly and systematically"
+            "Morse code is a form of communication using two signals: a short signal (a dot) and a long signal (a dash). These signals are separated by a short pause (a space), and the letters and words are formed by combining these signals.\n\n- **Dot (.)** represents a letter or number, and it is shorter than a dash.\n- **Dash (-)** represents a letter or number, and it is longer than a dot.\n- **Space** separates the letters and words in a message.\n\nFor example:\n- **\"HELLO\"** in Morse code is: `.... . . , ...-.- ...`\n\nThis system allows for clear and concise communication over long distances using a simple and standardized format."
           ]
         },
         {
           "id": "morse-sos",
           "passed": true,
           "completions": [
-            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}\n</tool_call>"
           ]
         },
         {
@@ -195,10 +209,17 @@
           ]
         },
         {
+          "id": "morse-complex-sentence",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet me at Gate 5, and bring maps!\"}}"
+          ]
+        },
+        {
           "id": "blink-five",
           "passed": true,
           "completions": [
-            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}\n</tool_call>"
           ]
         },
         {
@@ -206,7 +227,7 @@
           "passed": true,
           "completions": [
             "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
-            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+            "{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}"
           ]
         },
         {

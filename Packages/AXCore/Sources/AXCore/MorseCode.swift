@@ -18,9 +18,6 @@ public struct MorsePulse: Sendable, Equatable, Codable {
 /// and word gap = 7. The production flashlight tool uses a 0.2-second unit.
 public enum MorseCode {
     public static let unitSeconds = 0.2
-    public static let maxInputCharacters = 64
-    public static let maxDurationSeconds = 120.0
-
     public struct Transmission: Sendable, Equatable, Codable {
         public let sourceText: String
         public let normalizedText: String
@@ -33,20 +30,14 @@ public enum MorseCode {
 
     public enum EncodingError: Error, Sendable, Equatable, CustomStringConvertible {
         case empty
-        case tooLong(Int)
         case unsupportedCharacters(String)
-        case durationExceeded(Double)
 
         public var description: String {
             switch self {
             case .empty:
                 return "Morse text must not be empty."
-            case .tooLong(let count):
-                return "Morse text has \(count) characters; the limit is \(MorseCode.maxInputCharacters)."
             case .unsupportedCharacters(let characters):
                 return "Morse text contains unsupported characters: \(characters)."
-            case .durationExceeded(let seconds):
-                return "That Morse signal would take \(Int(ceil(seconds))) seconds; the limit is \(Int(MorseCode.maxDurationSeconds)) seconds."
             }
         }
     }
@@ -54,10 +45,6 @@ public enum MorseCode {
     public static func encode(_ source: String) throws -> Transmission {
         let trimmed = source.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw EncodingError.empty }
-        guard trimmed.count <= maxInputCharacters else {
-            throw EncodingError.tooLong(trimmed.count)
-        }
-
         let folded = trimmed.folding(
             options: [.diacriticInsensitive, .caseInsensitive],
             locale: Locale(identifier: "en_US_POSIX")
@@ -100,9 +87,6 @@ public enum MorseCode {
             notation: notationWords.joined(separator: " / "),
             pulses: pulses
         )
-        guard transmission.durationSeconds <= maxDurationSeconds else {
-            throw EncodingError.durationExceeded(transmission.durationSeconds)
-        }
         return transmission
     }
 

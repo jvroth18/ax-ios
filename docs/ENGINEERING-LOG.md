@@ -273,18 +273,18 @@ a dash, one between marks, three between letters, and seven between words. At th
 0.2-second unit, SOS is exactly 27 units and 5.4 seconds.
 
 The executor checks cancellation before every pulse and forces the torch off on success,
-cancellation, background interruption, or AVFoundation failure. Input is limited to 64
-characters and 120 seconds of total signaling; unsupported characters, empty text, and
-over-budget transmissions fail before the flashlight changes state. A request-policy guard
+cancellation, background interruption, or AVFoundation failure. There is no arbitrary input-length
+or transmission-duration cap, so complex sentences can run to completion; unsupported characters
+and empty text still fail before the flashlight changes state. A request-policy guard
 also requires the user's own words to authorize Morse signaling, preventing a small model
 from flashing arbitrary text in response to a joke or factual question.
 
 The suite is now 55 cases and includes explicit SOS signaling, implicit source extraction
 from “Turn Meet at 5 into Morse code,” and a no-tool explanation case. `swift test` passes
-148 tests, including the exact pulse train, word-gap timing, normalization, punctuation, and
-safety boundaries. The scoring-path fixture passes five known recordings. A cached offline
+149 tests, including the exact pulse train, word-gap timing, normalization, punctuation, and
+unbounded long-sentence behavior. The scoring-path fixture passes five known recordings. A cached offline
 run of `mlx-community/Qwen3-1.7B-4bit` revision
-`3b1b1768f8f8cf8351c712464f906e86c2b8269e` passed 27/27 checks across three seeds using the
+`3b1b1768f8f8cf8351c712464f906e86c2b8269e` passed 30/30 checks across three seeds using the
 shipping small-model prompt. The simulator and signed iPhone builds passed, and installation
 preserved the existing 923.2 MB model snapshot. The phone was locked when foreground launch
 was attempted, so observing the physical SOS flashes remains the one device-only release

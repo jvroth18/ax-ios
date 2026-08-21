@@ -110,8 +110,8 @@ final class ToolContractTests: XCTestCase {
         XCTAssertNotNil(validator.rejectionReason(for: call("signal_morse_code", [
             "text": .string("SOS 🚀"),
         ])))
-        XCTAssertNotNil(validator.rejectionReason(for: call("signal_morse_code", [
-            "text": .string(String(repeating: "0", count: 64)),
+        XCTAssertNil(validator.rejectionReason(for: call("signal_morse_code", [
+            "text": .string(String(repeating: "Meet at 5. ", count: 100)),
         ])))
     }
 
