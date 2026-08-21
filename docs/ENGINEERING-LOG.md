@@ -289,3 +289,25 @@ shipping small-model prompt. The simulator and signed iPhone builds passed, and 
 preserved the existing 923.2 MB model snapshot. The phone was locked when foreground launch
 was attempted, so observing the physical SOS flashes remains the one device-only release
 check; installation alone is not evidence that the torch timing was visible on hardware.
+
+---
+
+## 11. Morse product identity
+
+The shipping name is now **Morse** across the Home Screen display name, W95 window chrome,
+onboarding, chat attribution, settings, privacy permission copy, Action Button shortcut, and
+the model's system identity. Internal `AX*` Swift types, target names, bundle identifier, and
+URL scheme remain stable to avoid coupling a visual rebrand to a risky code migration.
+
+Three independent design reviews compared a telegraph key, Morse monogram, speech bubble,
+and flashlight-coded beam. The selected icon is a silver W95-era flashlight casting a
+dot-dash-dot cyan signal through a warm beam on navy. It won because it connects the Morse
+name to the app's actual flashlight capability and remains legible at 40 points. The asset
+catalog keeps the existing low-risk universal pipeline: one opaque 1024x1024 RGB PNG with no
+baked corner radius; the higher-resolution generated master is retained under `design/`.
+
+Validation: the icon was inspected at 180, 120, 60, and 40 pixels; AXCore passes 149 tests;
+the signed iPhone build succeeds; the generated app plist reports `Morse`; and the updated
+bundle installs and launches on the connected device. A simulator build reached app source
+compilation but its MLX macro host returned a malformed plugin response; the signed device
+build is the authoritative compile result for this iOS-only app.

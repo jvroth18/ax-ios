@@ -1,6 +1,6 @@
 # Tool calling
 
-AX uses the Hermes/Qwen convention. The system prompt lists every tool as a JSON schema
+Morse uses the Hermes/Qwen convention. The system prompt lists every tool as a JSON schema
 inside `<tools>…</tools>`; the model responds with:
 
 ```

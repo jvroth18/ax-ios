@@ -1,7 +1,7 @@
 import SwiftUI
 import AXCore
 
-/// The conversation, as a 90s chat log: "You:" / "AX:" lines in a sunken white well,
+/// The conversation, as a 90s chat log: "You:" / "Morse:" lines in a sunken white well,
 /// a Send button that's always visible, and a status bar reporting what the app is doing.
 struct ChatView: View {
     @Environment(AppState.self) private var appState
@@ -27,7 +27,7 @@ struct ChatView: View {
                                 W95Hourglass()
                                 Button("Stop") { conversation.cancelTurn() }
                                     .buttonStyle(W95ButtonStyle())
-                                Text(partial.isEmpty ? "AX is thinking…" : partial)
+                                Text(partial.isEmpty ? "Morse is thinking…" : partial)
                                     .font(W95.ui(13))
                                     .foregroundStyle(W95.shadow)
                             }
@@ -65,7 +65,7 @@ struct ChatView: View {
                             }
                         }
                         Text(appState.settings.toolsMode
-                             ? "Tools mode — AX can set reminders, timers, open apps"
+                             ? "Tools mode — Morse can set reminders, timers, open apps"
                              : "Tools mode off — conversation only")
                             .font(W95.ui(11))
                             .foregroundStyle(W95.shadow)
@@ -105,7 +105,7 @@ struct ChatView: View {
                     .w95Well(background: .white)
                     .accessibilityLabel("Message")
                     .accessibilityValue(typedInput)
-                    .accessibilityHint("Opens the AX keyboard. Use the separate Send button to submit.")
+                    .accessibilityHint("Opens the Morse keyboard. Use the separate Send button to submit.")
                     // One context-sensitive key: Send when there's text, mic when empty.
                     if hasDraft {
                         Button("Send") { submitTyped() }
@@ -141,12 +141,12 @@ struct ChatView: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Welcome to AX!")
+            Text("Welcome to Morse!")
                 .font(W95.ui(15, bold: true))
                 .foregroundStyle(W95.navy)
             Text("Press your Action Button to talk, or type below.")
                 .font(W95.ui(13))
-            Text("Tip: assign the Action Button under Settings → Action Button → Shortcut → Ask AX.")
+            Text("Tip: assign the Action Button under Settings → Action Button → Shortcut → Ask Morse.")
                 .font(W95.ui(12))
                 .foregroundStyle(W95.shadow)
         }
@@ -200,7 +200,7 @@ private struct ChatLine: View {
             (Text("You: ").font(W95.ui(13, bold: true)).foregroundStyle(W95.navy)
              + Text(message.text).font(W95.ui(13)).foregroundStyle(W95.text))
         case .assistant:
-            (Text("AX: ").font(W95.ui(13, bold: true)).foregroundStyle(W95.maroon)
+            (Text("Morse: ").font(W95.ui(13, bold: true)).foregroundStyle(W95.maroon)
              + Text(message.text).font(W95.ui(13)).foregroundStyle(W95.text))
         case .tool:
             Text("* \(message.text)")
