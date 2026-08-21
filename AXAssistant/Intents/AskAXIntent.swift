@@ -6,7 +6,7 @@ import AppIntents
 /// recording (see RootView.servicePendingListen) — on a cold start the app becomes active
 /// well before the model is ready, so the request has to outlive that moment.
 struct AskAXIntent: AppIntent {
-    static let title: LocalizedStringResource = "Ask AX"
+    static let title: LocalizedStringResource = "Ask Morse"
     static let description = IntentDescription(
         "Records a voice request and lets the on-device model act on it."
     )

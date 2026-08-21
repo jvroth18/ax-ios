@@ -14,7 +14,7 @@ struct ModelDownloadView: View {
             switch modelManager.state {
             case .idle:
                 W95GroupBox(label: "Welcome") {
-                    Text("AX runs \(modelManager.choice.name) entirely on this iPhone. Nothing you say ever leaves the device.")
+                    Text("Morse runs \(modelManager.choice.name) entirely on this iPhone. Nothing you say ever leaves the device.")
                         .font(W95.ui(13))
                     Text("One-time download: \(modelManager.choice.sizeLabel). Wi-Fi recommended.")
                         .font(W95.ui(11))

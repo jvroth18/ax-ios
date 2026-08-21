@@ -23,7 +23,7 @@ struct SettingsView: View {
                     Stepper("", value: $settings.maxToolIterations, in: 1...8)
                         .labelsHidden()
                 }
-                Text("How many tools AX may chain in one request. Higher = more capable multi-step actions, slower worst case.")
+                Text("How many tools Morse may chain in one request. Higher = more capable multi-step actions, slower worst case.")
                     .font(W95.ui(11))
                     .foregroundStyle(W95.shadow)
                 Toggle("Send only relevant tools (faster, experimental)", isOn: $settings.pruneToolsInPrompt)
@@ -58,7 +58,7 @@ struct SettingsView: View {
                                 }
                             }
 
-                            W95GroupBox(label: "Shortcuts AX may run") {
+                            W95GroupBox(label: "Shortcuts Morse may run") {
                                 if settings.registeredShortcuts.isEmpty {
                                     Text("(none registered)")
                                         .font(W95.ui(12))
@@ -94,14 +94,14 @@ struct SettingsView: View {
                                     }
                                     .buttonStyle(W95ButtonStyle())
                                 }
-                                Text("AX can only run Shortcuts listed here, and always asks first. Names must match the Shortcuts app exactly.")
+                                Text("Morse can only run Shortcuts listed here, and always asks first. Names must match the Shortcuts app exactly.")
                                     .font(W95.ui(11))
                                     .foregroundStyle(W95.shadow)
                             }
 
-                            W95GroupBox(label: "What AX remembers about you") {
+                            W95GroupBox(label: "What Morse remembers about you") {
                                 if UserMemoryStore.shared.facts.isEmpty {
-                                    Text("(nothing yet — AX saves facts you tell it about yourself)")
+                                    Text("(nothing yet — Morse saves facts you tell it about yourself)")
                                         .font(W95.ui(11))
                                         .foregroundStyle(W95.shadow)
                                 } else {
@@ -142,7 +142,7 @@ struct SettingsView: View {
                         .padding(8)
                     }
                     .w95Well(background: W95.face)
-                    W95StatusBar(fields: ["AX — on-device model runner"])
+                    W95StatusBar(fields: ["Morse — on-device model runner"])
                 }
                 .padding(4)
                 .background(W95.face)

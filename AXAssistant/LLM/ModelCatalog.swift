@@ -73,7 +73,7 @@ enum ModelCatalog {
             id: "jtown18/Qwen3.8-4B-Distilled-4bit",
             name: "Qwen3.8 4B Distilled", vendor: "Community (Ma7ee7)", params: "4B", downloadGB: 2.1,
             category: .assistant,
-            blurb: "Newest-generation Qwen3.8 distill, converted for AX. Scored 9/9 on the tool-calling eval — the best score of any community model tested.",
+            blurb: "Newest-generation Qwen3.8 distill, converted for Morse. Scored 9/9 on the tool-calling eval — the best score of any community model tested.",
             minMemoryGB: 8
         ),
 

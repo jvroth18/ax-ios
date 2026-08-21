@@ -1,6 +1,6 @@
-# Bottleship — an open-source, fully on-device voice agent for iPhone
+# Morse — an open-source, fully on-device voice agent for iPhone
 
-> The app ships as **Bottleship**; the targets, bundle id, and source prefixes are still
+> The app ships as **Morse**; the targets, bundle id, and source prefixes are still
 > `AX*` from before the rename.
 
 Press your **Action Button**, speak, and a language model running **entirely on your
@@ -42,11 +42,11 @@ Built for iPhone 15 Pro or newer (Action Button required), iOS 26.
 
 ## What it can and cannot do
 
-iOS sandboxing means a normal app **cannot** tap around inside other apps. AX is honest
+iOS sandboxing means a normal app **cannot** tap around inside other apps. Morse is honest
 about this and ships in two layers:
 
 - **AXAssistant** (this app): does everything Apple's frameworks and the Shortcuts
-  ecosystem legitimately allow. Anything you can put in a Shortcut, AX can trigger by voice.
+  ecosystem legitimately allow. Anything you can put in a Shortcut, Morse can trigger by voice.
 - **[AXDriver](AXDriver/README.md)** (optional, experimental, build-from-source only):
   true see-the-screen-and-tap automation via a WebDriverAgent runner + an on-device
   vision model. Never App Store distributable; read its README before touching it.
@@ -68,7 +68,7 @@ another app's UI from an App Store build.
 4. On first launch the app downloads **Qwen3-1.7B-4bit (~1.1 GB)** from Hugging Face —
    Wi-Fi recommended. Weights live in the app's Documents folder (visible and deletable
    in the Files app), excluded from iCloud backup.
-5. Assign the Action Button: **Settings → Action Button → Shortcut → Ask AX**.
+5. Assign the Action Button: **Settings → Action Button → Shortcut → Ask Morse**.
 
 ## Roadmap
 

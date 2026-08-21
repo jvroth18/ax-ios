@@ -32,7 +32,7 @@ struct ConnectorsView: View {
             } header: {
                 Text("Endpoints")
             } footer: {
-                Text("HTTPS endpoints AX may call by voice (\"check my talky stats\"). AX always asks before calling one. The model can only use endpoints listed here.")
+                Text("HTTPS endpoints Morse may call by voice (\"check my talky stats\"). Morse always asks before calling one. The model can only use endpoints listed here.")
             }
 
             Section {

@@ -98,7 +98,7 @@ public enum DateArgument {
 }
 
 public extension String {
-    /// The instant this date argument denotes, or nil if it isn't a date AX understands.
+    /// The instant this date argument denotes, or nil if it isn't a date Morse understands.
     /// See `DateArgument.parse` for the accepted shapes and the local-time rule.
     var iso8601Date: Date? { DateArgument.parse(self)?.date }
 }

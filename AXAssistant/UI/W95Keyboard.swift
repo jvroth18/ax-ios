@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// A compact in-app QWERTY keyboard. It keeps the muscle-memory layout of the
-/// iOS keyboard while making text entry feel like part of AX's visual world.
+/// iOS keyboard while making text entry feel like part of Morse's visual world.
 struct W95Keyboard: View {
     @Binding var text: String
     let onDismiss: () -> Void

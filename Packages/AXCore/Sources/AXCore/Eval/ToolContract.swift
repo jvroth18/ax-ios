@@ -46,7 +46,7 @@ public enum ArgumentContract: Sendable, Equatable, Codable {
         case .dateArgument:
             let raw = ArgumentMatcher.display(value)
             return DateArgument.parse(raw) == nil
-                ? "\(argument)=\"\(raw)\" is not a date-time AX can parse" : nil
+                ? "\(argument)=\"\(raw)\" is not a date-time Morse can parse" : nil
         case .iso8601RequiringZone:
             let raw = ArgumentMatcher.display(value)
             if !EvalDateParser.hasExplicitZone(raw) {
