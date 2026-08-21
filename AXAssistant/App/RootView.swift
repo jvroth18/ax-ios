@@ -10,7 +10,7 @@ struct RootView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .chat: return "AX"
+            case .chat: return "Morse"
             case .library: return "Model Library"
             case .monitor: return "System Monitor"
             case .settings: return "Settings"
@@ -99,7 +99,7 @@ struct RootView: View {
     private func windowBody(for window: AppWindow) -> some View {
         switch window {
         case .chat:
-            W95Window(title: "AX — \(modelManager.choice.name)") {
+            W95Window(title: "Morse — \(modelManager.choice.name)") {
                 VStack(spacing: 0) {
                     menuBar
                     if let status = actionButtonStatus {
@@ -407,7 +407,7 @@ struct RootView: View {
         default:
             return modelManager.isDownloaded(modelManager.choice)
                 ? "Stopped loading \(name) before it was ready. Start it below, then press the Action Button again."
-                : "AX needs to download \(name) (\(modelManager.choice.sizeLabel)) before it can listen."
+                : "Morse needs to download \(name) (\(modelManager.choice.sizeLabel)) before it can listen."
         }
     }
 

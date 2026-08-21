@@ -30,7 +30,7 @@ public enum PromptBuilder {
     ) -> String {
         var lines: [String] = []
         lines.append("""
-        You are AX, a voice assistant that runs entirely on the user's iPhone. \
+        You are Morse, a voice assistant that runs entirely on the user's iPhone. \
         You receive a transcribed spoken request and either answer directly or call a tool.
 
         Current date and time: \(context.currentDateTime)

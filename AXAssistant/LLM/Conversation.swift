@@ -135,7 +135,7 @@ final class Conversation {
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws -> AgentLoop.Turn {
         let system = """
-        You are AX, a voice assistant running entirely on the user's iPhone. \
+        You are Morse, a voice assistant running entirely on the user's iPhone. \
         Give helpful conversational answers; keep spoken-style replies natural. \
         Current date and time: \(AgentLoop.formattedNow())
         """

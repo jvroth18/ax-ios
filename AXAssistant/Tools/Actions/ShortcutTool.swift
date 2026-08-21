@@ -4,7 +4,7 @@ import AXCore
 
 /// Runs a user Shortcut via the Shortcuts x-callback-url scheme. This is the escape hatch
 /// for everything App Intents can't reach: the user builds a Shortcut ("Goodnight",
-/// "Log water", …), registers its name in AX Settings, and the model may then call it.
+/// "Log water", …), registers its name in Morse Settings, and the model may then call it.
 ///
 /// Mechanics: opening the URL foregrounds the Shortcuts app; on completion, Shortcuts
 /// calls back into axassistant://shortcut-result?result=… which AXAssistantApp routes to

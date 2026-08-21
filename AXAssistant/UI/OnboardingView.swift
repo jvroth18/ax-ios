@@ -13,7 +13,7 @@ struct OnboardingView: View {
     var body: some View {
         ZStack {
             W95Desktop()
-            W95Window(title: "AX Setup Wizard") {
+            W95Window(title: "Morse Setup Wizard") {
                 VStack(spacing: 0) {
                     HStack(alignment: .top, spacing: 0) {
                         sidebar
@@ -33,7 +33,7 @@ struct OnboardingView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("AX")
+            Text("Morse")
                 .font(.system(size: 30, weight: .black))
                 .foregroundStyle(.white)
             Text("SETUP")
@@ -60,7 +60,7 @@ struct OnboardingView: View {
             wizardPage(
                 title: "Everything stays on this iPhone",
                 lines: [
-                    "AX runs a language model locally. Your voice, your requests, and the model's replies never touch a server.",
+                    "Morse runs a language model locally. Your voice, your requests, and the model's replies never touch a server.",
                     "The only download is the model itself (about 1 GB, one time).",
                 ]
             )
@@ -68,7 +68,7 @@ struct OnboardingView: View {
             wizardPage(
                 title: "Microphone & speech",
                 lines: [
-                    "AX needs the mic to hear you and on-device speech recognition to transcribe you.",
+                    "Morse needs the mic to hear you and on-device speech recognition to transcribe you.",
                     "iOS will ask for both — everything is processed locally.",
                 ]
             )
@@ -78,8 +78,8 @@ struct OnboardingView: View {
                 lines: [
                     "1. Open Settings → Action Button",
                     "2. Swipe to \u{201C}Shortcut\u{201D}",
-                    "3. Choose \u{201C}Ask AX\u{201D}",
-                    "Then press and hold the Action Button any time to talk to AX.",
+                    "3. Choose \u{201C}Ask Morse\u{201D}",
+                    "Then press and hold the Action Button any time to talk to Morse.",
                 ]
             )
         }

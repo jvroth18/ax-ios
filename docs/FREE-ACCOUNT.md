@@ -1,6 +1,6 @@
-# Running AX on a free Apple Developer account
+# Running Morse on a free Apple Developer account
 
-You do not need the $99/yr Apple Developer Program to use AX — but the free tier has
+You do not need the $99/yr Apple Developer Program to use Morse — but the free tier has
 real limitations you'll live with:
 
 | Limitation | Effect |
@@ -8,7 +8,7 @@ real limitations you'll live with:
 | Provisioning profiles last **7 days** | The app refuses to launch after a week. Plug in (or use Wi-Fi debugging) and press Run in Xcode to re-install. Your data, settings, and the downloaded model **persist** — only the signature is refreshed. |
 | Max **3 sideloaded apps** | AXAssistant is 1; the WDA runner (AXDriver) is 2. |
 | Max 10 App IDs per 7 days | Don't churn bundle identifiers. |
-| Restricted entitlements | No push notifications, no WeatherKit, no `increased-memory-limit`. AX is designed to need none of these. |
+| Restricted entitlements | No push notifications, no WeatherKit, no `increased-memory-limit`. Morse is designed to need none of these. |
 
 ## The weekly ritual
 
