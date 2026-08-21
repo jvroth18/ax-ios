@@ -30,7 +30,8 @@ struct AppToolValidator: ToolExecutionValidating {
     private static let covered: Set<String> = [
         "create_reminder", "create_calendar_event", "read_next_events", "find_contact",
         "call_number", "compose_message", "open_app", "open_url", "set_timer",
-        "toggle_flashlight", "play_music", "run_shortcut", "wait", "repeat_steps", "remember",
+        "toggle_flashlight", "signal_morse_code", "play_music", "run_shortcut", "wait",
+        "repeat_steps", "remember",
     ]
 
     func covers(tool: String) -> Bool { Self.covered.contains(tool) }
@@ -107,6 +108,15 @@ struct AppToolValidator: ToolExecutionValidating {
             let state = call.string("state") ?? ""
             return ["on", "off"].contains(state) ? nil : "state=\"\(state)\" is not on/off"
 
+        case "signal_morse_code":
+            guard let text = call.string("text") else { return "missing required argument text" }
+            do {
+                _ = try MorseCode.encode(text)
+                return nil
+            } catch {
+                return String(describing: error)
+            }
+
         case "play_music":
             let action = call.string("action") ?? ""
             return ["play", "pause", "next", "previous"].contains(action)
@@ -180,6 +190,8 @@ struct AppToolValidator: ToolExecutionValidating {
             ToolCall(name: "open_url", arguments: ["url": .string("example.com")]),
             ToolCall(name: "call_number", arguments: ["number": .string("Dave")]),
             ToolCall(name: "wait", arguments: ["seconds": .number(0.5)]),
+            ToolCall(name: "signal_morse_code", arguments: ["text": .string("SOS")]),
+            ToolCall(name: "signal_morse_code", arguments: ["text": .string("SOS 🚀")]),
             ToolCall(name: "repeat_steps", arguments: [
                 "steps": .string("toggle_flashlight:on, wait:0.5"), "times": .number(3),
             ]),

@@ -1,0 +1,222 @@
+{
+  "model": "mlx-community/Qwen3-1.7B-4bit",
+  "modelRevision": "3b1b1768f8f8cf8351c712464f906e86c2b8269e",
+  "mlxLMVersion": "0.31.3",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "promptFile": "/tmp/ax-morse-qwen-prompt.txt",
+  "promptSHA256": "d1007c29e2c04960d4195f04c926d10d53a6b48e034fbe7710e72fa2e70b10d2",
+  "loadSeconds": 0.976,
+  "passed": true,
+  "runs": [
+    {
+      "seed": 1,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "hilariously, penguins are the best at swimming and never get stuck in snow."
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and storage to run apps and store data. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform tasks like making calls, sending messages, or browsing the internet. They also use cellular networks to connect to the internet and communicate with other devices."
+          ]
+        },
+        {
+          "id": "morse-fact",
+          "passed": true,
+          "completions": [
+            "The Morse code system uses a series of dots (.) and dashes (-) to represent letters and numbers. Each letter is encoded using a unique combination of these symbols, with the following rules:\n\n- **Dot** (.) is used for letters that are pronounced with a short, clear sound.\n- **Dash** (-) is used for letters that are pronounced with a longer, more sustained sound.\n- **Space** is represented by a space in the message, and is not part of the code itself.\n\nFor example:\n- **A** is represented as **.** (a single dot)\n- **B** is **-** (a dash)\n- **C** is **- .** (a dash followed by a dot)\n- **D** is **- -** (two dashes)\n- **E** is **.** (a single dot)\n- **F** is **"
+          ]
+        },
+        {
+          "id": "morse-sos",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+          ]
+        },
+        {
+          "id": "morse-implicit",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet at 5\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "hilariously, penguins are the best at swimming and never get stuck in snow."
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and storage to run apps and handle tasks. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform actions like calling a friend or sending a message. They also use cellular networks to connect to the internet and other devices."
+          ]
+        },
+        {
+          "id": "morse-fact",
+          "passed": true,
+          "completions": [
+            "The Morse code system uses a series of short and long signals to represent letters and numbers. Each letter is represented by a unique combination of dots (.) and dashes (-), where a dot is shorter than a dash. The basic rules are:\n\n- **Dot (.)** is a single stroke, representing a \"yes\" or \"one.\"\n- **Dash (-)** is a longer stroke, representing a \"no\" or \"zero.\"\n- **Space** is used to separate different letters and words.\n\nFor example:\n- **A** is represented as **. -** (a dot followed by a dash)\n- **B** is **- . .** (a dash followed by two dots)\n- **SOS** is **- . -** (a dash, a dot, and a dash).\n\nMorse code is used in communication over long distances, such as in radio, and it"
+          ]
+        },
+        {
+          "id": "morse-sos",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+          ]
+        },
+        {
+          "id": "morse-implicit",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet at 5\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 3,
+      "passed": true,
+      "checks": [
+        {
+          "id": "greeting",
+          "passed": true,
+          "completions": [
+            "Hi! How can I assist you today?"
+          ]
+        },
+        {
+          "id": "joke",
+          "passed": true,
+          "completions": [
+            "hilariously, penguins are the best at swimming and never get stuck in snow."
+          ]
+        },
+        {
+          "id": "phone-fact",
+          "passed": true,
+          "completions": [
+            "Hmm, phones work by using a combination of hardware and software. They have a main processor, memory, and various components like the camera, microphone, and screen. When you use a phone, you input commands through the touchscreen or a physical keyboard, and the phone processes those commands to perform tasks like calling a friend, sending a message, or playing music. The phone also connects to the internet through a cellular network, allowing it to access the web and communicate with other devices."
+          ]
+        },
+        {
+          "id": "morse-fact",
+          "passed": true,
+          "completions": [
+            "The Morse code system uses a series of short and long signals to represent letters and numbers. Each letter is represented by a unique combination of dots (.) and dashes (-), where a dot is shorter than a dash. The basic rules are:\n\n- **Dot (.)** is a single stroke, representing a \"yes\" or \"one.\"\n- **Dash (-)** is a longer stroke, representing a \"no\" or \"zero.\"\n- **Space** is used to separate different characters or words.\n\nFor example:\n- **A** is represented as **. -** (a dot followed by a dash)\n- **B** is **- . .** (a dash followed by two dots)\n- **SOS** is **- . -** (a dash, a dot, and a dash).\n\nMorse code is used in communication, especially in radio, to transmit information clearly and systematically"
+          ]
+        },
+        {
+          "id": "morse-sos",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"SOS\"}}"
+          ]
+        },
+        {
+          "id": "morse-implicit",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"signal_morse_code\", \"arguments\": {\"text\": \"Meet at 5\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "blink-five",
+          "passed": true,
+          "completions": [
+            "{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 5}}"
+          ]
+        },
+        {
+          "id": "blink-ten-then-call",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, wait:0.25, toggle_flashlight:off, wait:0.25\", \"times\": 10}}\n</tool_call>",
+            "<tool_call>\n{\"name\": \"call_number\", \"arguments\": {\"number\": \"6316452763\"}}\n</tool_call>"
+          ]
+        },
+        {
+          "id": "x-then-y-then-z",
+          "passed": true,
+          "completions": [
+            "<tool_call>\n{\"name\": \"repeat_steps\", \"arguments\": {\"steps\": \"toggle_flashlight:on, play_music:pause, set_timer:2\", \"times\": 1}}\n</tool_call>"
+          ]
+        }
+      ]
+    }
+  ]
+}

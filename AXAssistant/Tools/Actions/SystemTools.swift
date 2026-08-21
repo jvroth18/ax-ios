@@ -74,6 +74,21 @@ struct OpenURLTool: AXTool {
     }
 }
 
+private enum TorchController {
+    static func set(_ isOn: Bool) throws {
+        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else {
+            throw AXToolError.notAvailable("No flashlight on this device.")
+        }
+        try device.lockForConfiguration()
+        defer { device.unlockForConfiguration() }
+        if isOn {
+            try device.setTorchModeOn(level: 1.0)
+        } else {
+            device.torchMode = .off
+        }
+    }
+}
+
 struct FlashlightTool: AXTool {
     let spec = ToolSpec(
         name: "toggle_flashlight",
@@ -88,17 +103,59 @@ struct FlashlightTool: AXTool {
 
     func run(_ call: ToolCall) async throws -> ToolResult {
         guard let state = call.string("state") else { throw AXToolError.missingArgument("state") }
-        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else {
-            throw AXToolError.notAvailable("No flashlight on this device.")
+        guard ["on", "off"].contains(state) else {
+            throw AXToolError.badArgument("state", "must be on or off")
         }
-        try device.lockForConfiguration()
-        defer { device.unlockForConfiguration() }
-        if state == "on" {
-            try device.setTorchModeOn(level: 1.0)
-        } else {
-            device.torchMode = .off
-        }
+        try TorchController.set(state == "on")
         return .ok("Flashlight \(state).")
+    }
+}
+
+/// Converts source text to International Morse in deterministic code, then drives the
+/// physical torch. The model supplies language, never timing or dot/dash strings: small
+/// models are good at choosing this tool, while code is better at counting exact units.
+struct MorseFlashlightTool: AXTool {
+    let spec = ToolSpec(
+        name: "signal_morse_code",
+        description: "Flash text as International Morse code using the iPhone flashlight. Pass the original text; this tool performs the encoding and timing.",
+        parameters: JSONSchema(
+            type: .object,
+            properties: [
+                "text": JSONSchema(
+                    type: .string,
+                    description: "The original letters, numbers, words, or punctuation to signal; do not translate it to dots and dashes"
+                ),
+            ],
+            required: ["text"]
+        ),
+        risk: .safe
+    )
+
+    func run(_ call: ToolCall) async throws -> ToolResult {
+        guard let text = call.string("text") else { throw AXToolError.missingArgument("text") }
+        let transmission: MorseCode.Transmission
+        do {
+            transmission = try MorseCode.encode(text)
+        } catch let error as MorseCode.EncodingError {
+            throw AXToolError.badArgument("text", error.description)
+        }
+
+        // The torch must finish off even when the user taps Stop, the app backgrounds,
+        // a sleep is cancelled, or AVFoundation fails midway through the signal.
+        defer { try? TorchController.set(false) }
+        for pulse in transmission.pulses {
+            try Task.checkCancellation()
+            try TorchController.set(pulse.isOn)
+            let nanoseconds = UInt64(
+                Double(pulse.units) * MorseCode.unitSeconds * 1_000_000_000
+            )
+            try await Task.sleep(nanoseconds: nanoseconds)
+        }
+
+        return .ok(
+            "Signaled \"\(transmission.normalizedText)\" in Morse code "
+                + "(\(transmission.notation))."
+        )
     }
 }
 
